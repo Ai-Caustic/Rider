@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using DomainLayer.Enums;
 
 namespace DomainLayer.Models
 {
@@ -10,18 +11,25 @@ namespace DomainLayer.Models
     {
         public required string Email { get; set; }
 
-        public required int PhoneNumber { get; set; }
+        [RegularExpression(@"^[0-9]{10}$")] // 10-digit phone number validation
+        public required int PhoneNumber { get; set; } 
 
         public required int IdNumber { get; set; }
 
-        public byte[] ? ProfilePhoto { get; set; }
+        public string ? ProfilePhotoUrl { get; set; }
 
-        public DateTime ? BirthDate { get; set; }
+        public DateOnly ? BirthDate { get; set; }
 
         public string ? Gender { get; set; }
 
-        public required byte[] IdPhoto { get; set; }
-    
+        public required string IdPhotoUrl { get; set; }
 
+        public Roles Role { get; set; } 
+
+
+        public virtual Ride ? Ride { get; set; }
+
+        public virtual Payment ? Payment { get; set; }
+    
     }
 }
