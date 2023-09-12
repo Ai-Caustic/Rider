@@ -1,6 +1,10 @@
 using DataLayer.Data;
 using DomainLayer.Models;
 using Microsoft.EntityFrameworkCore;
+using RepositoryLayer.Repository;
+using RepositoryLayer.IRepository;
+using ServiceLayer.ICustomServices;
+using ServiceLayer.CustomServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +19,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString,
     b => b.MigrationsAssembly("DataLayer")
     ));
+#region Service Injected
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped< ICustomService <Location>, LocationService >();
+
+#endregion
 
 var app = builder.Build();
 

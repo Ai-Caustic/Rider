@@ -9,19 +9,19 @@ namespace DomainLayer.Models
 {
     public class Driver : BaseEntity
     {
-
         public required string FirstName { get; set; }
 
-        public required string LastName { get; set; }
+        public required string LastName { get; set; }  
 
         public required string Email { get; set; }
 
         [RegularExpression(@"^[0-9]{10}$")] // 10-digit phone number validation
-        public required int PhoneNumber { get; set; }
+        //[Required]
+        public int PhoneNumber { get; set; }
 
         public Roles Roles { get; set; }
-
-        public required string DriverPhotoUrl { get; set; }
+        [Required]
+        public  string DriverPhotoUrl { get; set; }
 
         public required string LicensePhotoUrl { get; set; }
 
