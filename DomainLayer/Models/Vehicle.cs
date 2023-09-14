@@ -9,7 +9,9 @@ namespace DomainLayer.Models
     public class Vehicle : BaseEntity
     {
     
-        public Guid ? DriverId { get; set; }
+        public Guid DriverId { get; set; }
+
+        public Guid RideId { get; set; }
 
         public required string Model { get; set; }
 
@@ -23,7 +25,7 @@ namespace DomainLayer.Models
 
         public required string InsurancePhotoUrl { get; set; }
 
-        public virtual Driver ? Driver { get; set; }
+        public virtual Driver Driver { get; set; }
 
         public virtual Ride ? Ride { get; set; }
 

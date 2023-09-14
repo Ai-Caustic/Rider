@@ -1,7 +1,7 @@
 ﻿using DataLayer.Data;
 using DomainLayer.Models;
 using Microsoft.EntityFrameworkCore;
-using RepositoryLayer.IRepository;
+using DomainLayer.IRepository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,74 +10,72 @@ using System.Threading.Tasks;
 
 namespace RepositoryLayer.Repository
 {
-    public class PaymentRepository <T> : IPaymentRepository <T> where T : Payment 
+    public class PaymentRepository : IPaymentRepository 
     {
-        #region property
         private readonly ApplicationDbContext _context;
 
-        private DbSet<T> payments;
-        #endregion
-
-        #region constructor
         public PaymentRepository(ApplicationDbContext context)
         {
             _context = context;
-            payments = _context.Set<T>();
         }
-        #endregion
 
-        public IEnumerable<T> GetAll()
+        public async Task<List<Payment>> GetAllPayments()
         {
-            return payments.AsEnumerable();
+            return await _context.Payments.AsNoTracking().ToListAsync();
         }
 
-        public T Get(Guid Id)
+        public async Task<Payment> GetPaymentById(Guid Id)
         {
-            return payments.SingleOrDefault(p => p.Id == Id);
+            return await _context.Payments.SingleOrDefaultAsync(p => p.Id == Id);
         }
 
-        public void Insert(T payment)
+        public async Task Insert(Payment payment)
         {
             if (payment == null)
             {
                 throw new ArgumentNullException(nameof(payment));
             }
-            payments.Add(payment);
-            _context.SaveChanges();
+            _context.Add(payment);
+            await _context.SaveChangesAsync();
         }
 
-        public void Update(T payment)
+        public async Task Update(Payment payment)
         {
             if (payment == null)
             {
                 throw new ArgumentNullException(nameof(payment));
             }
-            payments.Add(payment);
-            _context.SaveChanges();
+            _context.Add(payment);
+            await _context.SaveChangesAsync();
         }
 
-        public void Delete(T payment)
+        public async Task Delete(Payment payment)
         {
             if (payment == null)
             {
                 throw new ArgumentNullException(nameof(payment));
             }
-            payments.Remove(payment);
-            _context.SaveChanges();
+            _context.Remove(payment);
+            await _context.SaveChangesAsync();
         }
 
-        public void Remove(T payment)
+        public void Remove(Payment payment)
         {
             if (payment == null)
             {
                 throw new ArgumentNullException(nameof(payment));
             }
-            payments.Remove(payment);
+            _context.Remove(payment);
         }
 
         public void SaveChanges()
         {
             _context.SaveChanges();
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();  
         }
     }
 }

@@ -5,6 +5,8 @@ using RepositoryLayer.Repository;
 using RepositoryLayer.IRepository;
 using ServiceLayer.ICustomServices;
 using ServiceLayer.CustomServices;
+//using ServiceLayer.IDriverService;
+//using ServiceLayer.DriverService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +22,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     b => b.MigrationsAssembly("DataLayer")
     ));
 #region Service Injected
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+//builder.Services.AddScoped(typeof(IDriverService), typeof(Repository<>));
+builder.Services.AddScoped<IDriverService, DriverService>(); //This is the way to inject services
 builder.Services.AddScoped< ICustomService <Location>, LocationService >();
 
 #endregion

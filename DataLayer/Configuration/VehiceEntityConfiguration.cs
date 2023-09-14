@@ -22,7 +22,9 @@ namespace DataLayer.Configuration
 
             builder.HasOne(v => v.Ride)
                 .WithOne(r => r.Vehicle)
-                .HasForeignKey<Ride>(r => r.VehicleId);
+                .HasForeignKey<Ride>(r => r.VehicleId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
 
             builder.HasOne(v => v.Driver)
                 .WithMany(d => d.Vehicles)

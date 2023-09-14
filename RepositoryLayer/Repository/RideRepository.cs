@@ -1,7 +1,7 @@
 ﻿using DataLayer.Data;
 using DomainLayer.Models;
 using Microsoft.EntityFrameworkCore;
-using RepositoryLayer.IRepository;
+using DomainLayer.IRepository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,75 +10,72 @@ using System.Threading.Tasks;
 
 namespace RepositoryLayer.Repository
 {
-    public class RideRepository <T> : IRideRepository <T> where T : Ride
+    public class RideRepository : IRideRepository
     {
-        #region property
         private readonly ApplicationDbContext _context;
 
-        private DbSet<T> rides;
-        #endregion
-
-
-        #region constructor
         public RideRepository (ApplicationDbContext context)
         {
             _context = context;
-            rides = _context.Set<T>();
         }
-        #endregion
 
-        public IEnumerable<T> GetAll()
+        public async Task<List<Ride>> GetAllRides()
         {
-            return rides.AsEnumerable();
+            return await _context.Rides.AsNoTracking().ToListAsync();
         }
 
-        public T Get (Guid Id)
+        public async Task<Ride> GetRideById (Guid Id)
         {
-            return rides.SingleOrDefault(r => r.Id == Id);
+            return await _context.Rides.SingleOrDefaultAsync(r => r.Id == Id);
         }
 
-        public void Insert(T ride)
+        public async Task Insert(Ride ride)
         {
             if (ride == null)
             {
                 throw new ArgumentNullException(nameof(ride));
             }
-            rides.Add(ride);
-            _context.SaveChanges();
+            _context.Add(ride);
+            await _context.SaveChangesAsync();
         }
 
-        public void Update(T ride)
+        public async Task Update(Ride ride)
         {
             if (ride == null)
             {
                 throw new ArgumentNullException(nameof(ride));
             }
-            rides.Update(ride);
-            _context.SaveChanges();
+            _context.Update(ride);
+            await _context.SaveChangesAsync();
         }
 
-        public void Delete(T ride)
+        public async Task Delete(Ride ride)
         {
            if (ride == null)
            {
                throw new ArgumentNullException(nameof(ride));
            }
-           rides.Remove(ride);
-            _context.SaveChanges();
+           _context.Remove(ride);
+           await _context.SaveChangesAsync();
         }
 
-        public void Remove(T ride)
+        public void Remove(Ride ride)
         {
             if (ride == null)
             {
                 throw new ArgumentNullException(nameof(ride));
             }
-            rides.Remove(ride);
+            _context.Remove(ride);
         }
 
         public void SaveChanges()
         {
             _context.SaveChanges();
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
 
     }

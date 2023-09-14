@@ -18,67 +18,101 @@ namespace ServiceLayer.CustomServices
             _locationRepository = locationRepository;
         }
 
-        public void Delete(Location entity) {
-            try {
-                if (entity != null) {
+        public void Delete(Location entity)
+        {
+            try
+            {
+                if (entity != null)
+                {
                     _locationRepository.Delete(entity);
                     _locationRepository.SaveChanges();
                 }
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
                 throw;
             }
         }
-        public Location Get(Guid Id) {
-            try {
+        public Location Get(Guid Id)
+        {
+            try
+            {
                 var obj = _locationRepository.Get(Id);
-                if (obj != null) {
+                if (obj != null)
+                {
                     return obj;
-                } else {
+                }
+                else
+                {
                     return null;
                 }
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
                 throw;
             }
         }
-        public IEnumerable < Location > GetAll() {
-            try {
+        public IEnumerable<Location> GetAll()
+        {
+            try
+            {
                 var obj = _locationRepository.GetAll();
-                if (obj != null) {
+                if (obj != null)
+                {
                     return obj;
-                } else {
+                }
+                else
+                {
                     return null;
                 }
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
                 throw;
             }
         }
-        public void Insert(Location entity) {
-            try {
-                if (entity != null) {
+        public void Insert(Location entity)
+        {
+            try
+            {
+                if (entity != null)
+                {
                     _locationRepository.Insert(entity);
                     _locationRepository.SaveChanges();
                 }
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
                 throw;
             }
         }
-        public void Remove(Location entity) {
-            try {
-                if (entity != null) {
+        public void Remove(Location entity)
+        {
+            try
+            {
+                if (entity != null)
+                {
                     _locationRepository.Remove(entity);
                     _locationRepository.SaveChanges();
                 }
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
                 throw;
             }
         }
-        public void Update(Location entity) {
-            try {
-                if (entity != null) {
+        public void Update(Location entity)
+        {
+            try
+            {
+                if (entity != null)
+                {
                     _locationRepository.Update(entity);
                     _locationRepository.SaveChanges();
                 }
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
                 throw;
             }
         }

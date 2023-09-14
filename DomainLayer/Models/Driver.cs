@@ -19,6 +19,8 @@ namespace DomainLayer.Models
         //[Required]
         public int PhoneNumber { get; set; }
 
+        public Guid RideId { get; set; }
+
         public Roles Roles { get; set; }
         [Required]
         public  string DriverPhotoUrl { get; set; }

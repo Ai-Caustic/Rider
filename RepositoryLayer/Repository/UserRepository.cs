@@ -4,79 +4,78 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DomainLayer.Models;
-using RepositoryLayer.IRepository;
+using DomainLayer.IRepository;
 using DataLayer.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace RepositoryLayer.Repository
 {
-    public class UserRepository <T> : IUserRepository<T> where T : User
+    public class UserRepository : IUserRepository
     {
-        #region property
         private readonly ApplicationDbContext _context;
-        private DbSet<T> users;
-        #endregion
 
-        #region constructor
         public UserRepository(ApplicationDbContext context)
         {
             _context = context;
-            users = _context.Set<T>();
         }
-        #endregion
 
-        public IEnumerable<T> GetAll()
+        public async Task<List<User>> GetAllUsers()
         {
-            return users.AsEnumerable();
+            return await _context.Users.AsNoTracking().ToListAsync();
         }
 
-        public T Get (Guid Id)
+        public async Task<User> GetUserById (Guid Id)
         {
-            return users.SingleOrDefault(u => u.Id == Id);
+            return await _context.Users.SingleOrDefaultAsync(u => u.Id == Id);
         }
 
-        public void Insert (T user)
+        public async Task Insert (User user)
         {
             if (user == null)
             {
                 throw new ArgumentException("user");
             }
-            users.Add(user);
-            _context.SaveChanges();
+            _context.Add(user);
+            await _context.SaveChangesAsync();
         }
 
-        public void Update(T user)
+        public async Task Update(User user)
         {
             if (user == null)
             {
                 throw new ArgumentNullException("user");
             }
-            users.Update(user);
-            _context.SaveChanges();
+            _context.Update(user);
+            await _context.SaveChangesAsync();
         }
 
-        public void Delete (T user)
+        public async Task Delete (User user)
         {
             if (user == null)
             {
                 throw new ArgumentNullException("user");
             }
-            users.Remove(user);
-            _context.SaveChanges();
+            _context.Remove(user);
+            await _context.SaveChangesAsync();
         }
 
-        public void Remove(T user)
+        public void Remove(User user)
         {
             if (user == null)
             {
                 throw new ArgumentNullException("user");
             }
-            users.Remove(user);
+            _context.Remove(user);
         }
 
         public void SaveChanges()
         {
             _context.SaveChanges();
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
     }
 }

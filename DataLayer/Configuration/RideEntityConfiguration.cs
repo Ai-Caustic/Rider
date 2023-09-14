@@ -19,6 +19,16 @@ namespace DataLayer.Configuration
             builder.Property(r => r.Id )
                 .HasColumnName("RideId");
 
+            builder.HasOne(r => r.Driver)
+                   .WithOne(d => d.Ride)
+                   .HasForeignKey<Driver>(d => d.RideId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(r => r.Vehicle)
+                   .WithOne(v => v.Ride)
+                   .HasForeignKey<Vehicle>(v => v.RideId)
+                   .OnDelete(DeleteBehavior.Restrict); 
+
             builder.HasOne(r => r.Payment)
                 .WithOne(p => p.Ride)
                 .HasForeignKey<Payment>(p => p.RideId);    

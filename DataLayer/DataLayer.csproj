@@ -18,10 +18,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\DomainLayer\DomainLayer.csproj" />
   </ItemGroup>
-
 
 </Project>

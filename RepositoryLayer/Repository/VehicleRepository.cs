@@ -1,7 +1,7 @@
 ﻿using DataLayer.Data;
 using DomainLayer.Models;
 using Microsoft.EntityFrameworkCore;
-using RepositoryLayer.IRepository;
+using DomainLayer.IRepository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,74 +10,108 @@ using System.Threading.Tasks;
 
 namespace RepositoryLayer.Repository
 {
-    public class VehicleRepository <T> : IVehicleRepository <T> where T : Vehicle
+    public class VehicleRepository : IVehicleRepository
     {
-        #region property
         private readonly ApplicationDbContext _context;
 
-        private DbSet<T> vehicles;
-        #endregion
-
-        #region Constructor
-        public VehicleRepository (ApplicationDbContext context)
+        public VehicleRepository(ApplicationDbContext context)
         {
             _context = context;
-            vehicles = _context.Set<T>();
         }
-        #endregion
 
-        public IEnumerable<T> GetAll()
+        public async Task<List<Vehicle>> GetAllVehicles()
         {
-            return vehicles.AsEnumerable();
+            return await _context.Vehicles.AsNoTracking().ToListAsync();
         }
 
-        public T Get(Guid Id)
+        public async Task<Vehicle> GetVehicleById(Guid Id)
         {
-            return vehicles.SingleOrDefault(v => v.Id == Id);
+            return await _context.Vehicles.SingleOrDefaultAsync(v => v.Id == Id);
         }
 
-        public void Insert(T vehicle)
+        public async Task Insert(Vehicle vehicle)
         {
             if (vehicle == null)
             {
                 throw new ArgumentNullException(nameof(vehicle));
             }
-            vehicles.Add(vehicle);
-            _context.SaveChanges();
+            _context.Add(vehicle);
+            await _context.SaveChangesAsync();
         }
 
-        public void Update(T vehicle)
+        public async Task Update(Vehicle vehicle)
         {
             if (vehicle == null)
             {
                 throw new ArgumentNullException(nameof(vehicle));
             }
-            vehicles.Update(vehicle);
-            _context.SaveChanges();
+            _context.Update(vehicle);
+            await _context.SaveChangesAsync();
         }
 
-        public void Delete(T vehicle)
+        public async Task Delete(Vehicle vehicle)
         {
             if (vehicle == null)
             {
                 throw new ArgumentNullException(nameof(vehicle));
             }
-            vehicles.Remove(vehicle);
-            _context.SaveChanges();
+            _context.Remove(vehicle);
+            await _context.SaveChangesAsync();
         }
 
-        public void Remove(T vehicle)
+        public void Remove(Vehicle vehicle)
         {
             if (vehicle == null)
             {
                 throw new ArgumentNullException(nameof(vehicle));
             }
-            vehicles.Remove(vehicle);
+            _context.Remove(vehicle);
         }
 
         public void SaveChanges()
         {
             _context.SaveChanges();
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        public DbSet<Driver> Drivers
+        {
+            get
+            {
+                return _context.Drivers;
+            }
+            set
+            {
+                _context.Drivers = value;
+            }
+        }
+
+        public DbSet<Vehicle> Vehicles
+        {
+            get
+            {
+                return _context.Vehicles;
+            }
+            set
+            {
+                _context.Vehicles = value;
+            }
+        }
+
+        public DbSet<Ride> Rides
+        {
+            get
+            {
+                return _context.Rides;
+            }
+            set
+            {
+                _context.Rides = value;
+            }
         }
     }
 }
