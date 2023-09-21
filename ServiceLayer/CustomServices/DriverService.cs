@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RepositoryLayer.Repository;
-using Microsoft.EntityFrameworkCore;
 using DomainLayer.IRepository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ServiceLayer.CustomServices
 {
@@ -16,50 +16,37 @@ namespace ServiceLayer.CustomServices
     {
         private readonly IDriverRepository _driverRepository;
 
+        private readonly ILogger<DriverService> _logger;
 
-        public DriverService(IDriverRepository driverRepository)
+
+        public DriverService(IDriverRepository driverRepository, ILogger<DriverService> logger)
         {
             _driverRepository = driverRepository;
+            _logger = logger;
 
         }
 
-        public async Task<List<Driver>> GetAllDrivers()
+        public async Task GetAllDrivers()
         {
             try
             {
-                var obj =  await _driverRepository.GetAllDrivers();
-                if (obj != null)
-                {
-                    return obj;
-                }    
-                else
-                {
-                    return null;
-                }
+                await _driverRepository.GetAllDrivers();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
         }
 
-        public async Task<Driver> GetDriverByID(Guid Id)
+        public async Task GetDriverById(Guid Id)
         {
             try
             {
-                var obj = await _driverRepository.GetDriverById(Id);
-                if (obj != null)
-                {
-                    return obj;
-                }
-                else
-                {
-                    return null;
-                }
+                await _driverRepository.GetDriverById(Id);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
         }
 
@@ -70,16 +57,15 @@ namespace ServiceLayer.CustomServices
                 if (driver != null)
                 {
                     await _driverRepository.Insert(driver);
-                    await _driverRepository.SaveChangesAsync();
                 }
                 else
                 {
                     throw new ArgumentNullException(nameof(driver));
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
         }
 
@@ -90,12 +76,11 @@ namespace ServiceLayer.CustomServices
                 if (driver != null)
                 {
                     await _driverRepository.Update(driver);
-                    await _driverRepository.SaveChangesAsync();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
         }
 
@@ -105,13 +90,12 @@ namespace ServiceLayer.CustomServices
             {
                 if (driver != null)
                 {
-                    await _driverRepository.Delete(driver);
-                    await _driverRepository.SaveChangesAsync();
+                    await _driverRepository.Remove(driver);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
         }
 
@@ -121,91 +105,83 @@ namespace ServiceLayer.CustomServices
         {
             try
             {
-                var driver =  await _driverRepository.Drivers.FindAsync(driverId);
-                var vehicle = await _driverRepository.Vehicles.FindAsync(vehicleId);
-                if (driver != null && vehicle != null)
-                {
-                    await _driverRepository.Vehicles.AddAsync(vehicle); //TODO
-                    await _driverRepository.SaveChangesAsync();
-                }
+                await _driverRepository.AssignVehicle(driverId, vehicleId); 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
         }
 
-        public async Task RemoveVehicleFromDriver(Guid driverId, Guid vehicleId)
+        public async Task UnassignVehicleFromDriver(Guid driverId, Guid vehicleId)
         {
             try
             {
-                var driver = await _driverRepository.Drivers.FindAsync(driverId);
-                var vehicle = await _driverRepository.Vehicles.FindAsync(vehicleId);
-
-                if (driver != null && vehicle != null)
-                {
-                    //driver.Vehicles.Remove(vehicle);
-                    _driverRepository.Vehicles.Remove(vehicle);
-                    await _driverRepository.SaveChangesAsync();
-                }
+                await _driverRepository.UnassignVehicle(driverId, vehicleId);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
         }
 
-        public async Task<List<Driver>> SearchDriver(string searchItem)
+        public async Task SearchDriver(string searchItem)
         {
             try
             {
-                if (searchItem != null)
-                {
-                    return await _driverRepository.Drivers
-                                            .Where(d => d.FirstName.Contains(searchItem) || d.LastName.Contains(searchItem) || d.Email.Contains(searchItem))
-                                            .AsNoTracking()
-                                            .ToListAsync();
-                }
-                else
-                {
-                    throw new ArgumentNullException(nameof(searchItem));
-                }
+                await _driverRepository.Search(searchItem);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
         }
 
-        public async Task<List<Vehicle>> GetDriverVehicles(Guid driverId)
+        public async Task GetDriverVehicles(Guid driverId)
         {
             try
             {
-                var driver =  await _driverRepository.Drivers
-                                     .Include(d => d.Vehicles)
-                                     .FirstOrDefaultAsync(d => d.Id == driverId);
-
-                return driver.Vehicles.ToList() ?? new List<Vehicle>();
+                await _driverRepository.GetDriverVehicles(driverId);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}"); 
             }
         }
 
-        public async Task<List<Ride>> GetDriverRideHistory(Guid driverId)
+        public async Task GetDriverRideHistory(Guid driverId)
         {
             try
             {
-                var driverRides = await _driverRepository.Rides
-                                          .Where(r => r.DriverId == driverId)
-                                          .ToListAsync();
-
-                return driverRides;
+                await _driverRepository.GetDriverRides(driverId);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
-                throw;
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");  
+            }
+        }
+
+        public async Task StartRide(Guid driverId, Guid rideId, Guid vehicleId)
+        {
+            try
+            {
+                await _driverRepository.StartRide(driverId, rideId, vehicleId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+            }
+        }
+
+        public async Task EndRide(Guid rideId)
+        {
+            try
+            {
+                await _driverRepository.EndRide(rideId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
         }
 

@@ -20,9 +20,8 @@ namespace DataLayer.Configuration
                 .HasColumnName("RideId");
 
             builder.HasOne(r => r.Driver)
-                   .WithOne(d => d.Ride)
-                   .HasForeignKey<Driver>(d => d.RideId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .WithMany(d => d.Rides)
+                   .HasForeignKey(r => r.RideId);
 
             builder.HasOne(r => r.Vehicle)
                    .WithOne(v => v.Ride)
@@ -31,7 +30,11 @@ namespace DataLayer.Configuration
 
             builder.HasOne(r => r.Payment)
                 .WithOne(p => p.Ride)
-                .HasForeignKey<Payment>(p => p.RideId);    
+                .HasForeignKey<Payment>(p => p.RideId); 
+
+            builder.HasOne(r => r.User)
+                   .WithMany(u => u.Rides)
+                   .HasForeignKey(r => r.UserId); 
 
             builder.Property(r => r.PickUpLatitude)
                 .HasColumnType("decimal(8, 6)")

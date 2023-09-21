@@ -18,12 +18,12 @@ namespace DomainLayer.IRepository
 
         Task Update(Ride ride);
 
-        Task Delete(Ride ride);
+        Task Remove(Ride ride);
 
-        void Remove(Ride ride);
+        Task CancelRide(Guid rideId);
 
-        void SaveChanges();
+        Task<List<Ride>> GetDriverRides(Guid driverId);
 
-        Task SaveChangesAsync();
+        Task<List<Ride>> GetUserRides(Guid userId); 
     }
 }

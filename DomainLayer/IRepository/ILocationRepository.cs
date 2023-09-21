@@ -18,12 +18,7 @@ namespace DomainLayer.IRepository
 
         Task Update(Location location);
 
-        Task Delete(Location location);
+        Task Remove(Location location);
 
-        void Remove(Location location);
-
-        void SaveChanges();
-
-        Task SaveChangesAsync();
     }
 }

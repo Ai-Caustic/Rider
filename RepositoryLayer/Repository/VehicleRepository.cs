@@ -49,7 +49,7 @@ namespace RepositoryLayer.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task Delete(Vehicle vehicle)
+        public async Task Remove(Vehicle vehicle)
         {
             if (vehicle == null)
             {
@@ -59,59 +59,41 @@ namespace RepositoryLayer.Repository
             await _context.SaveChangesAsync();
         }
 
-        public void Remove(Vehicle vehicle)
+        public async Task<Vehicle> SearchPlate(string plateNo)
         {
-            if (vehicle == null)
-            {
-                throw new ArgumentNullException(nameof(vehicle));
-            }
-            _context.Remove(vehicle);
+            return await _context.Vehicles
+                                      .AsNoTracking()
+                                      .FirstOrDefaultAsync(v => v.LicensePlate == plateNo);
         }
 
-        public void SaveChanges()
+        public async Task<List<Vehicle>> QueryVehicles(string query)
         {
-            _context.SaveChanges();
+            return await _context.Vehicles
+                                   .AsNoTracking()
+                                   .Where(v => v.Model.Contains(query) || v.LicensePlate.Contains(query))
+                                   .ToListAsync(); 
         }
 
-        public async Task SaveChangesAsync()
+        public async Task<List<Vehicle>> SearchVehicleBySeats(int seatsNo)
         {
-            await _context.SaveChangesAsync();
+            return await _context.Vehicles
+                                    .AsNoTracking()
+                                    .Where(v => v.NumberOfSeats.Equals(seatsNo))
+                                    .ToListAsync();
         }
 
-        public DbSet<Driver> Drivers
+
+        public async Task<Driver> GetVehicleDriver(Guid driverId)
         {
-            get
-            {
-                return _context.Drivers;
-            }
-            set
-            {
-                _context.Drivers = value;
-            }
+            return await _context.Drivers.FirstOrDefaultAsync(d => d.Id == driverId);
         }
 
-        public DbSet<Vehicle> Vehicles
+        public async Task<List<Ride>> GetVehicleRides(Guid vehicleId)
         {
-            get
-            {
-                return _context.Vehicles;
-            }
-            set
-            {
-                _context.Vehicles = value;
-            }
-        }
-
-        public DbSet<Ride> Rides
-        {
-            get
-            {
-                return _context.Rides;
-            }
-            set
-            {
-                _context.Rides = value;
-            }
+            return await _context.Rides
+                                 .Where(r => r.VehicleId == vehicleId)
+                                 .OrderBy(r => r.CreatedAt)
+                                 .ToListAsync();
         }
     }
 }

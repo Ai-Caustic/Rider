@@ -1,5 +1,6 @@
 using DomainLayer.Models;
 using ServiceLayer.ICustomServices;
+using DomainLayer.Enums;
 using DataLayer.Data;
 using System;
 using System.Collections.Generic;
@@ -12,23 +13,23 @@ using Microsoft.Extensions.Logging;
 
 namespace ServiceLayer.CustomServices
 {
-    public class VehicleService : IVehicleService
+    public class UserService : IUserService
     {
-        private readonly IVehicleRepository _vehicleRepository;
+        private readonly IUserRepository _userRepository;
 
-        private readonly ILogger<VehicleService> _logger;
+        private readonly ILogger<UserService> _logger;
 
-        public VehicleService(IVehicleRepository vehicleRepository, ILogger<VehicleService> logger)
+        public UserService(IUserRepository userRepository, ILogger<UserService> logger)
         {
-            _vehicleRepository = vehicleRepository;
+            _userRepository = userRepository;
             _logger = logger;
         }
 
-        public async Task GetAllVehicles()
+        public async Task GetAllUsers()
         {
             try
             {
-                await _vehicleRepository.GetAllVehicles();
+                await _userRepository.GetAllUsers();
             }
             catch (Exception ex)
             {
@@ -36,11 +37,11 @@ namespace ServiceLayer.CustomServices
             }
         }
 
-        public async Task GetVehicleById(Guid Id)
+        public async Task GetUserById(Guid Id)
         {
             try
             {
-                await _vehicleRepository.GetVehicleById(Id);
+                await _userRepository.GetUserById(Id);
             }
             catch (Exception ex)
             {
@@ -48,35 +49,11 @@ namespace ServiceLayer.CustomServices
             }
         }
 
-        public async Task GetVehicleByPlate(string licensePlate)
+        public async Task CreateUser(User user)
         {
             try
             {
-                await _vehicleRepository.SearchPlate(licensePlate);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
-            }
-        }
-
-        public async Task CreateVehicle(Vehicle vehicle)
-        {
-            try
-            {
-                await _vehicleRepository.Insert(vehicle);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
-            }
-        }
-
-        public async Task UpdateVehicle(Vehicle vehicle)
-        {
-            try
-            {
-                await _vehicleRepository.Update(vehicle);
+                await _userRepository.Insert(user);
             }
             catch(Exception ex)
             {
@@ -84,11 +61,11 @@ namespace ServiceLayer.CustomServices
             }
         }
 
-        public async Task DeleteVehicle(Vehicle vehicle)
+        public async Task UpdateUser(User user)
         {
             try
             {
-                await _vehicleRepository.Remove(vehicle);
+                await _userRepository.Update(user);
             }
             catch (Exception ex)
             {
@@ -96,11 +73,11 @@ namespace ServiceLayer.CustomServices
             }
         }
 
-        public async Task SearchVehicles(string searchItem)
+        public async Task DeleteUser(User user)
         {
             try
             {
-                await _vehicleRepository.QueryVehicles(searchItem);
+                await _userRepository.Remove(user);
             }
             catch (Exception ex)
             {
@@ -108,11 +85,11 @@ namespace ServiceLayer.CustomServices
             }
         }
 
-        public async Task GetVehicleDriver(Guid vehicleId)
+        public async Task SearchUser(string searchItem)
         {
             try
             {
-                await _vehicleRepository.GetVehicleDriver(vehicleId);
+                await _userRepository.Search(searchItem);
             }
             catch(Exception ex)
             {
@@ -120,11 +97,23 @@ namespace ServiceLayer.CustomServices
             }
         }
 
-        public async Task GetVehicleRideHistory(Guid vehicleId)
+        public async Task GetUserPayments(Guid userId)
         {
             try
             {
-                await _vehicleRepository.GetVehicleRides(vehicleId);
+                await _userRepository.GetUserPayments(userId);                                       
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+            }
+        }
+
+        public async Task GetUserRides(Guid userId)
+        {
+            try
+            {
+                await _userRepository.GetUserRides(userId);
             }
             catch(Exception ex)
             {
@@ -132,6 +121,28 @@ namespace ServiceLayer.CustomServices
             }
         }
 
+        public async Task BookRide(Guid userId, Ride ride)
+        {   
+            try
+            {
+                await _userRepository.BookRide(userId, ride);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+            }
+        }
 
+        public async Task CancelRide(Guid rideId)
+        {
+            try
+            {
+                await _userRepository.CancelRide(rideId);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+            }
+        }
     }
 }

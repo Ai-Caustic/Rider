@@ -17,6 +17,10 @@ namespace DataLayer.Configuration
 
             builder.HasKey(p => p.Id);
 
+            builder.HasOne(p => p.User)
+                   .WithMany(u => u.Payments)
+                   .HasForeignKey(p => p.UserId);
+
             builder.Property(p => p.Id)
                 .HasColumnName("PaymentId");
 

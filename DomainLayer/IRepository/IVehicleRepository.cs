@@ -18,19 +18,17 @@ namespace DomainLayer.IRepository
 
         Task Update(Vehicle vehicle);
 
-        Task Delete(Vehicle vehicle);
+        Task Remove(Vehicle vehicle);
 
-        void Remove(Vehicle vehicle);
+        Task<Vehicle> SearchPlate(string plateNo);
 
-        void SaveChanges();
+        Task<List<Vehicle>> QueryVehicles(string query);
 
-        Task SaveChangesAsync();
+        Task<List<Vehicle>> SearchVehicleBySeats(int seatsNo);
 
-        DbSet<Vehicle> Vehicles { get; set; }
+        Task<Driver> GetVehicleDriver(Guid driverId);
 
-        DbSet<Driver> Drivers { get; set; }
-
-        DbSet<Ride> Rides { get; set; }
+        Task<List<Ride>> GetVehicleRides(Guid vehicleId);
 
     }
 }

@@ -2,6 +2,7 @@
 using DomainLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using DomainLayer.IRepository;
+using DomainLayer.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,33 +50,51 @@ namespace RepositoryLayer.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task Delete(Ride ride)
-        {
-           if (ride == null)
-           {
-               throw new ArgumentNullException(nameof(ride));
-           }
-           _context.Remove(ride);
-           await _context.SaveChangesAsync();
-        }
-
-        public void Remove(Ride ride)
+        public async Task Remove(Ride ride)
         {
             if (ride == null)
             {
                 throw new ArgumentNullException(nameof(ride));
             }
             _context.Remove(ride);
-        }
-
-        public void SaveChanges()
-        {
-            _context.SaveChanges();
-        }
-
-        public async Task SaveChangesAsync()
-        {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task CancelRide(Guid rideId)
+        {
+                var ride = await _context.Rides.FirstOrDefaultAsync(r => r.Id == rideId);
+                var rideStatus = ride.Status;
+
+                if(ride != null)
+                {
+                    if(rideStatus == RideStatus.InProgress)
+                    {
+                        rideStatus = RideStatus.Canceled;
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        throw new Exception("Problem with completing ride");
+                    }
+                }
+        }
+
+        public async Task<List<Ride>> GetDriverRides(Guid driverId)
+        {
+            return await _context.Rides
+                          .Where(r => r.DriverId == driverId)
+                          .AsNoTracking()
+                          .OrderBy(r => r.CreatedAt)
+                          .ToListAsync();
+        }
+
+        public async Task<List<Ride>> GetUserRides(Guid userId)
+        {
+            return await _context.Rides
+                                 .Where(r => r.UserId == userId)
+                                 .AsNoTracking()
+                                 .OrderBy(r => r.CreatedAt)
+                                 .ToListAsync();
         }
 
     }

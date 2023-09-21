@@ -31,7 +31,7 @@ namespace DomainLayer.Models
 
         public virtual ICollection<Vehicle> ? Vehicles { get; set; }
 
-        public virtual Ride ? Ride { get; set;}
+        public virtual ICollection<Ride> ? Rides { get; set;}
 
     }
 }

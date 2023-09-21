@@ -49,7 +49,7 @@ namespace RepositoryLayer.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task Delete(Payment payment)
+        public async Task Remove(Payment payment)
         {
             if (payment == null)
             {
@@ -59,23 +59,31 @@ namespace RepositoryLayer.Repository
             await _context.SaveChangesAsync();
         }
 
-        public void Remove(Payment payment)
+        public async Task<List<Payment>> GetUserPayments(Guid userId)
         {
-            if (payment == null)
-            {
-                throw new ArgumentNullException(nameof(payment));
-            }
-            _context.Remove(payment);
+            return await _context.Payments
+                          .Where(u => u.UserId == userId)
+                          .AsNoTracking()
+                          .ToListAsync();  
+        }
+        
+        public async Task<List<Payment>> QueryPaymentByAmount(string query)
+        {
+            //We assume the query is an amount
+            var amount = float.Parse(query);
+
+            return await _context.Payments
+                                        .Where(p => p.PaymentAmount.Equals(amount))
+                                        .AsNoTracking()
+                                        .ToListAsync();
         }
 
-        public void SaveChanges()
+        public async Task<List<Payment>> QueryPaymentByMethod(string query)
         {
-            _context.SaveChanges();
-        }
-
-        public async Task SaveChangesAsync()
-        {
-            await _context.SaveChangesAsync();  
+            return await _context.Payments
+                                        .Where(p => p.PaymentMethod.Contains(query))
+                                        .AsNoTracking()
+                                        .ToListAsync();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using DomainLayer.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +18,16 @@ namespace DomainLayer.IRepository
 
         Task Update(User user);
 
-        Task Delete(User user);
+        Task Remove(User user);
 
-        void Remove(User user);
+        Task<List<User>> Search(string query);
 
-        void SaveChanges();
+        Task<List<Ride>> GetUserRides(Guid userId);
 
-        Task SaveChangesAsync();
+        Task<List<Payment>> GetUserPayments(Guid userId);
+
+        Task BookRide(Guid userId, Ride ride);
+
+        Task CancelRide(Guid rideId);
     }
 }

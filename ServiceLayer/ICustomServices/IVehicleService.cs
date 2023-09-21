@@ -9,11 +9,11 @@ namespace ServiceLayer.ICustomServices
 {
     public interface IVehicleService
     {
-        Task<List<Vehicle>> GetAllVehicles();
+        Task GetAllVehicles();
 
-        Task<Vehicle> GetVehicleById(Guid id);
+        Task GetVehicleById(Guid id);
 
-        Task<Vehicle> GetVehicleByPlate(string licensePlate);
+        Task GetVehicleByPlate(string licensePlate);
 
         Task CreateVehicle(Vehicle vehicle);
 
@@ -21,10 +21,10 @@ namespace ServiceLayer.ICustomServices
 
         Task DeleteVehicle(Vehicle vehicle);
 
-        Task<List<Vehicle>> SearchVehicles(string searchItem);
+        Task SearchVehicles(string searchItem);
 
-        Task<List<Driver>> GetVehicleDriver(Guid vehicleId);
+        Task GetVehicleDriver(Guid vehicleId);
 
-        Task<List<Ride>> GetVehicleRideHistory(Guid vehicleId);
+        Task GetVehicleRideHistory(Guid vehicleId);
     }
 }

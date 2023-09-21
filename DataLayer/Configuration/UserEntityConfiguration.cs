@@ -20,13 +20,13 @@ namespace DataLayer.Configuration
             builder.Property(u => u.Id)
                 .HasColumnName("UserId");
 
-            builder.HasOne(u => u.Ride)
+            builder.HasMany(u => u.Rides)
                 .WithOne(r => r.User)
-                .HasForeignKey<Ride>(r => r.UserId);
+                .HasForeignKey(r => r.UserId);
 
-            builder.HasOne(u => u.Payment)
+            builder.HasMany(u => u.Payments)
                 .WithOne(p => p.User)
-                .HasForeignKey<Payment>(p => p.UserId);
+                .HasForeignKey(p => p.UserId);
 
             builder.HasAlternateKey(u => new { u.Email, u.IdNumber, u.PhoneNumber });
 

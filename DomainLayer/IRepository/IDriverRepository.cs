@@ -15,22 +15,26 @@ namespace DomainLayer.IRepository
 
         Task<Driver> GetDriverById(Guid id);
 
+        Task<Vehicle> GetVehicleById(Guid id);
+
         Task Insert(Driver driver);
 
         Task Update(Driver driver);
 
-        Task Delete(Driver driver);
-
         Task Remove(Driver driver);
 
-        void SaveChanges();
+        Task AssignVehicle(Guid driverId, Guid vehicleId);
 
-        Task SaveChangesAsync();
+        Task UnassignVehicle(Guid driverId, Guid vehicleId);
 
-        DbSet<Driver> Drivers { get; set; }
+        Task<List<Driver>> Search(string query);
 
-        DbSet<Vehicle> Vehicles { get; set; }
+        Task<List<Vehicle>> GetDriverVehicles(Guid driverId);
 
-        DbSet<Ride> Rides { get; set; }
+        Task<List<Ride>> GetDriverRides(Guid driverId);
+
+        Task StartRide(Guid driverId, Guid rideId, Guid vehicleId);
+
+        Task EndRide(Guid rideId);
     }
 }

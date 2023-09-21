@@ -1,4 +1,5 @@
 ﻿using DataLayer.Data;
+using DomainLayer.Enums;
 using DomainLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -22,13 +23,26 @@ namespace RepositoryLayer.Repository
 
         public async Task<List<Driver>> GetAllDrivers()
         {
-            //return await drivers.AsNoTracking().ToListAsync();
-            return await _context.Drivers.AsNoTracking().ToListAsync();
+            return await _context.Drivers
+                                 .Include(d => d.Vehicles)
+                                 .Include(d => d.Rides)
+                                 .AsNoTracking()
+                                 .ToListAsync(); 
         }
 
         public async Task<Driver> GetDriverById(Guid Id)
         {
-            return await _context.Drivers.SingleOrDefaultAsync(d => d.Id == Id);
+            return await _context.Drivers
+                                 .Include(d => d.Vehicles)
+                                 .Include(d => d.Rides)
+                                 .SingleOrDefaultAsync(d => d.Id == Id);
+        }
+
+        public async Task<Vehicle> GetVehicleById(Guid Id)
+        {
+            return await _context.Vehicles
+                                 .AsNoTracking()
+                                 .SingleOrDefaultAsync(v => v.Id == Id);
         }
 
         public async Task Insert(Driver driver)
@@ -51,16 +65,6 @@ namespace RepositoryLayer.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task Delete(Driver driver)
-        {
-            if (driver == null)
-            {
-                throw new ArgumentNullException("driver");
-            }
-            _context.Drivers.Remove(driver);
-            await _context.SaveChangesAsync();
-        }
-
         public async Task Remove(Driver driver)
         {
             if (driver == null)
@@ -68,52 +72,109 @@ namespace RepositoryLayer.Repository
                 throw new ArgumentNullException("driver");
             }
             _context.Remove(driver);
-        }
-
-        public void SaveChanges()
-        {
-            _context.SaveChanges();
-        }
-
-        public async Task SaveChangesAsync()
-        {
             await _context.SaveChangesAsync();
-        } 
+        }
 
-        public DbSet<Driver> Drivers
+        public async Task AssignVehicle(Guid driverId, Guid vehicleId)
         {
-            get
+            var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == driverId);
+            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(d => d.Id == vehicleId);
+
+            if (driver != null && vehicle != null)
             {
-                return _context.Drivers;
-            }
-            set
-            {
-                _context.Drivers = value;
+                if(vehicle.DriverId == null)
+                {
+                    vehicle.DriverId = driverId;
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    throw new Exception("Vehicle already has a driver");
+                }
             }
         }
 
-        public DbSet<Vehicle> Vehicles
+        public async Task UnassignVehicle(Guid driverId, Guid vehicleId)
         {
-            get
+            var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == driverId);
+            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(d => d.Id == vehicleId);
+
+            if(driver != null && vehicle != null)
             {
-                return _context.Vehicles;
-            }
-            set
-            {
-                _context.Vehicles = value;
+                if (vehicle.DriverId == driverId)
+                {
+                    _context.Entry(vehicle).Property("DriverId").CurrentValue = null;
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    throw new InvalidOperationException("The driver is not assigned to this vehicle");
+                }
             }
         }
 
-        public DbSet<Ride> Rides
+        public async Task<List<Driver>> Search(string query)
         {
-            get
+            return await _context.Drivers
+                                       .Where(d => d.FirstName.Contains(query) ||
+                                        d.LastName.Contains(query) ||
+                                        d.Email.Contains(query) ||
+                                        d.Equals(query))
+                                        .ToListAsync();
+        }
+
+        public async Task<List<Vehicle>> GetDriverVehicles(Guid driverId)
+        {
+            return await _context.Vehicles
+                                 .Where(v => v.DriverId == driverId)
+                                 .ToListAsync();
+        }
+
+        public async Task<List<Ride>> GetDriverRides(Guid driverId)
+        {
+            return await _context.Rides
+                                 .Where(r => r.DriverId == driverId)
+                                 .OrderBy(r => r.CreatedAt)
+                                 .ToListAsync();
+        }
+
+        public async Task StartRide(Guid driverId, Guid rideId, Guid vehicleId)
+        {
+            var driver = await _context.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == driverId);
+            var ride = await _context.Rides.AsNoTracking().FirstOrDefaultAsync(r => r.Id == rideId);
+            var vehicle = await _context.Vehicles.AsNoTracking().FirstOrDefaultAsync(v => v.Id == vehicleId);
+
+            if (driver != null && ride != null && vehicle != null)
             {
-                return _context.Rides;
-            }
-            set
-            {
-                _context.Rides = value;
+                if( ride.DriverId == null && ride.Status == RideStatus.Requested)
+                {
+                    ride.DriverId = driverId;
+                    ride.VehicleId = vehicleId;
+                    //await _context.Rides.Update(ride); TODO: Confirm if I should update context
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    throw new ArgumentException("Cannot find driver or ride");
+                }
             }
         }
+
+        public async Task EndRide(Guid rideId)
+        {
+            var ride = await _context.Rides.AsNoTracking().FirstOrDefaultAsync(r => r.Id == rideId);
+
+            if (ride != null && ride.Status == RideStatus.InProgress)
+            {
+                ride.Status = RideStatus.Completed;
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new ArgumentException("Cannot find ride or ride is not in progress");
+            }
+        }
+
+        //TODO: Implement method GetRides and GetVehicles eg _context.Drivers.Include(x => x.Rides) 
     }
 }

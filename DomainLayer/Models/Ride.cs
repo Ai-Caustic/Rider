@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using DomainLayer.Enums;
 
 
 namespace DomainLayer.Models
@@ -15,6 +16,8 @@ namespace DomainLayer.Models
         public Guid ? UserId { get; set; }
 
         public Guid ? VehicleId { get; set; }
+
+        public Guid ? RideId { get; set; }
 
         public string ? PickupLocation { get; set; }
 
@@ -32,7 +35,9 @@ namespace DomainLayer.Models
 
         public DateTime EndTime { get; set; } // Timestamp for when the ride Ended
 
-        public required double RideFare { get; set; }
+        public RideStatus Status { get; set; } // Status of the ride
+
+        public double RideFare { get; set; }
 
         public virtual Vehicle ? Vehicle { get; set; }
 

@@ -17,13 +17,13 @@ namespace DomainLayer.IRepository
 
         Task Update(Payment payment);
 
-        Task Delete(Payment payment);
+        Task Remove(Payment payment);
 
-        void Remove(Payment payment);
+        Task<List<Payment>> GetUserPayments(Guid userId);
 
-        void SaveChanges();
+        Task<List<Payment>> QueryPaymentByAmount(string query);
 
-        Task SaveChangesAsync();
+        Task<List<Payment>> QueryPaymentByMethod(string query);
         
     }
 }

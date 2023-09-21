@@ -49,32 +49,13 @@ namespace RepositoryLayer.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task Delete(Location location)
+        public async Task Remove(Location location)
         {
             if(location == null)
             {
                 throw new ArgumentNullException(nameof(location));
             }
             _context.Remove(location);
-            await _context.SaveChangesAsync();
-        }
-
-        public void Remove(Location location)
-        {
-            if(location == null)
-            {
-                throw new ArgumentNullException(nameof(location));
-            }
-            _context.Remove(location);
-        }
-
-        public void SaveChanges()
-        {
-            _context.SaveChanges();
-        }
-
-        public async Task SaveChangesAsync()
-        {
             await _context.SaveChangesAsync();
         }
     }

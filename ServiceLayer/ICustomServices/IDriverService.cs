@@ -9,9 +9,9 @@ namespace ServiceLayer.ICustomServices
 {
     public interface IDriverService
     {
-        Task<List<Driver>> GetAllDrivers();
+        Task GetAllDrivers();
 
-        Task<Driver> GetDriverByID (Guid Id);
+        Task GetDriverById (Guid Id); 
         
         Task CreateDriver (Driver driver);
 
@@ -21,12 +21,16 @@ namespace ServiceLayer.ICustomServices
 
         Task AssignVehicleToDriver (Guid driverId, Guid vehicleId);
 
-        Task RemoveVehicleFromDriver (Guid driverId, Guid vehicleId);
+        Task UnassignVehicleFromDriver (Guid driverId, Guid vehicleId);
 
-        Task<List<Driver>> SearchDriver (string searchItem);
+        Task SearchDriver (string searchItem); 
 
-        Task<List<Vehicle>> GetDriverVehicles (Guid driverId);
+        Task GetDriverVehicles (Guid driverId); 
 
-        Task<List<Ride>> GetDriverRideHistory (Guid driverId);
+        Task GetDriverRideHistory (Guid driverId); 
+
+        Task StartRide (Guid driverId, Guid rideId, Guid vehicleId);
+
+        Task EndRide (Guid rideId);
     }
 }

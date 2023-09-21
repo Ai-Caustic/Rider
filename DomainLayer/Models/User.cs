@@ -27,9 +27,9 @@ namespace DomainLayer.Models
         public Roles Role { get; set; } 
 
 
-        public virtual Ride ? Ride { get; set; }
+        public ICollection<Ride> ? Rides { get; set; }
 
-        public virtual Payment ? Payment { get; set; }
+        public ICollection<Payment> ?  Payments { get; set; }
     
     }
 }

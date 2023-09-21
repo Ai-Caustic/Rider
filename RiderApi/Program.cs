@@ -1,12 +1,10 @@
 using DataLayer.Data;
 using DomainLayer.Models;
 using Microsoft.EntityFrameworkCore;
+using DomainLayer.IRepository;
 using RepositoryLayer.Repository;
-using RepositoryLayer.IRepository;
 using ServiceLayer.ICustomServices;
 using ServiceLayer.CustomServices;
-//using ServiceLayer.IDriverService;
-//using ServiceLayer.DriverService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,14 +16,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString,
-    b => b.MigrationsAssembly("DataLayer")
-    ));
+    options.UseSqlServer(connectionString));
 #region Service Injected
-//builder.Services.AddScoped(typeof(IDriverService), typeof(Repository<>));
 builder.Services.AddScoped<IDriverService, DriverService>(); //This is the way to inject services
-builder.Services.AddScoped< ICustomService <Location>, LocationService >();
-
 #endregion
 
 var app = builder.Build();
