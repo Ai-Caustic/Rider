@@ -34,6 +34,10 @@ namespace DataLayer.Configuration
                 .IsRequired()
                 .HasMaxLength(255);
 
+            builder.Property(u => u.UserName)
+                   .IsRequired()
+                   .HasMaxLength(255);
+
             builder.Property(u => u.IdNumber)
                 .IsRequired()
                 .HasMaxLength(8);

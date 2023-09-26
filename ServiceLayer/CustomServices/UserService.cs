@@ -2,6 +2,7 @@ using DomainLayer.Models;
 using ServiceLayer.ICustomServices;
 using DomainLayer.Enums;
 using DataLayer.Data;
+using TransferLayer.DTOS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 using DomainLayer.IRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using AutoMapper;
 
 namespace ServiceLayer.CustomServices
 {
@@ -19,129 +21,170 @@ namespace ServiceLayer.CustomServices
 
         private readonly ILogger<UserService> _logger;
 
-        public UserService(IUserRepository userRepository, ILogger<UserService> logger)
+        private readonly IMapper _mapper;
+
+        public UserService(IUserRepository userRepository, ILogger<UserService> logger, IMapper mapper)
         {
             _userRepository = userRepository;
             _logger = logger;
+            _mapper = mapper;
         }
 
-        public async Task GetAllUsers()
+        public async Task<List<UserDTO>> GetAllUsers()
         {
             try
             {
-                await _userRepository.GetAllUsers();
+                var users = await _userRepository.GetAllUsers();
+
+                return _mapper.Map<List<UserDTO>>(users);
+                
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
+
+            return null;
         }
 
-        public async Task GetUserById(Guid Id)
+        public async Task<UserDTO> GetUserById(Guid Id)
         {
             try
             {
-                await _userRepository.GetUserById(Id);
+                var user = await _userRepository.GetUserById(Id);
+                
+                return _mapper.Map<UserDTO>(user);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
+
+            return null;
         }
 
-        public async Task CreateUser(User user)
+        public async Task<bool> CreateUser(UserDTO userDTO) 
         {
             try
             {
+                var id = new Guid();
+                var user = _userRepository.MapUserDTO(userDTO);
                 await _userRepository.Insert(user);
+                return true;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateUser(Guid userId)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserById(userId);
+                if(user == null)
+                {
+                    throw new ArgumentNullException("User");
+                }
+                await _userRepository.Update(userId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteUser(Guid userId)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserById(userId);
+                if(user == null)
+                {
+                    throw new ArgumentNullException("user");
+                }
+                await _userRepository.Remove(userId); // Change here
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
+            }
+        }
+
+        public async Task<List<UserDTO>> SearchUsers(string searchItem)
+        {
+            try
+            {
+                var results = await _userRepository.Search(searchItem);
+
+                return _mapper.Map<List<UserDTO>>(results);
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
+            return null;
         }
 
-        public async Task UpdateUser(User user)
+        public async Task<bool> GetUserPayments(Guid userId)
         {
             try
             {
-                await _userRepository.Update(user);
+                await _userRepository.GetUserPayments(userId);
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
         }
 
-        public async Task DeleteUser(User user)
-        {
-            try
-            {
-                await _userRepository.Remove(user);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
-            }
-        }
-
-        public async Task SearchUser(string searchItem)
-        {
-            try
-            {
-                await _userRepository.Search(searchItem);
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
-            }
-        }
-
-        public async Task GetUserPayments(Guid userId)
-        {
-            try
-            {
-                await _userRepository.GetUserPayments(userId);                                       
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
-            }
-        }
-
-        public async Task GetUserRides(Guid userId)
+        public async Task<bool> GetUserRides(Guid userId)
         {
             try
             {
                 await _userRepository.GetUserRides(userId);
+                return true;
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
         }
 
-        public async Task BookRide(Guid userId, Ride ride)
+        public async Task<bool> BookRide(Guid userId, Ride ride)
         {   
             try
             {
                 await _userRepository.BookRide(userId, ride);
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
         }
 
-        public async Task CancelRide(Guid rideId)
+        public async Task<bool> CancelRide(Guid rideId)
         {
             try
             {
                 await _userRepository.CancelRide(rideId);
+                return true;
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
         }
     }

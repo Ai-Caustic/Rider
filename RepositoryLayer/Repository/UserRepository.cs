@@ -8,6 +8,9 @@ using DomainLayer.IRepository;
 using DataLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using DomainLayer.Enums;
+using TransferLayer.DTOS;
+using AutoMapper;
+using Microsoft.Extensions.Logging;
 
 namespace RepositoryLayer.Repository
 {
@@ -15,9 +18,15 @@ namespace RepositoryLayer.Repository
     {
         private readonly ApplicationDbContext _context;
 
-        public UserRepository(ApplicationDbContext context)
+        private readonly IMapper _mapper;
+
+        private readonly ILogger<UserRepository> _logger;
+
+        public UserRepository(ApplicationDbContext context, IMapper mapper, ILogger<UserRepository> logger)
         {
             _context = context;
+            _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<List<User>> GetAllUsers()
@@ -39,33 +48,74 @@ namespace RepositoryLayer.Repository
 
         public async Task Insert (User user)
         {
-            if (user == null)
+            try
             {
-                throw new ArgumentException("user");
+                if (user != null)
+                {
+                    bool userExists = await _context.Users.AnyAsync(u => u.Email == user.Email);
+                    if (userExists)
+                    {
+                        throw new InvalidOperationException("User with the same email already exists");
+                    }
+                    await _context.AddAsync(user);
+                    await _context.SaveChangesAsync();
+                }
+                throw new ArgumentNullException("User");
+                
             }
-            _context.Add(user);
-            await _context.SaveChangesAsync();
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
+            
         }
 
-        public async Task Update(User user)
+        public async Task Update(Guid userId)
         {
-            if (user == null)
+            try
             {
-                throw new ArgumentNullException("user");
+                var user = await GetUserById(userId);
+                if (user != null)
+                {
+                    _context.Update(user);
+                    await _context.SaveChangesAsync();
+                }
+                throw new ArgumentNullException("User");
             }
-            _context.Update(user);
-            await _context.SaveChangesAsync();
+            catch (Exception ex)
+            {
+               _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
         }
 
-        public async Task Remove(User user)
+        public async Task Remove(Guid userId)
         {
-            if (user == null)
+            try
             {
-                throw new ArgumentNullException("user");
+                var user = await GetUserById(userId);
+                if (user != null)
+                {
+                    _context.Remove(user);
+                    await _context.SaveChangesAsync();
+                }
+                throw new ArgumentNullException("User");
             }
-            _context.Remove(user);
-            await _context.SaveChangesAsync();
+            catch (Exception ex)
+            {
+               _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
         }
+
+        public User MapUserDTO(UserDTO userDTO)
+        {
+            return _mapper.Map<User>(userDTO);
+        }
+
+        public UserDTO MapUser(User user)
+        {
+            return _mapper.Map<UserDTO>(user);
+        }
+
 
         public async Task<List<User>> Search(string query)
         {

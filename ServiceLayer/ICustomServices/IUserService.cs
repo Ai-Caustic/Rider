@@ -1,5 +1,6 @@
 using DomainLayer.Models;
 using System;
+using TransferLayer.DTOS;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,25 +10,25 @@ namespace ServiceLayer.ICustomServices
 {
     public interface IUserService
     {
-        Task GetAllUsers();
+        Task<List<UserDTO>> GetAllUsers();
 
-        Task GetUserById(Guid Id);
+        Task<UserDTO> GetUserById(Guid Id);
 
-        Task CreateUser (User user);
+        Task<bool> CreateUser (UserDTO userDTO);
 
-        Task UpdateUser (User user);
+        Task<bool> UpdateUser (Guid userId);
 
-        Task DeleteUser (User user);
+        Task<bool> DeleteUser (Guid userId);
 
-        Task SearchUser (string searchItem);
+        Task<List<UserDTO>> SearchUsers (string searchItem);
 
-        Task GetUserPayments(Guid userId);
+        Task<bool> GetUserPayments(Guid userId);
 
-        Task GetUserRides(Guid userId);
+        Task<bool> GetUserRides(Guid userId);
 
-        Task BookRide(Guid userId, Ride ride);
+        Task<bool> BookRide(Guid userId, Ride ride);
 
-        Task CancelRide (Guid rideId);
+        Task<bool> CancelRide (Guid rideId);
 
 
     }

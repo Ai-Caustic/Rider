@@ -11,6 +11,8 @@ namespace DomainLayer.Models
     {
         public required string Email { get; set; }
 
+        public required string UserName { get; set; }
+
         [RegularExpression(@"^[0-9]{10}$")] // 10-digit phone number validation
         public required int PhoneNumber { get; set; } 
 

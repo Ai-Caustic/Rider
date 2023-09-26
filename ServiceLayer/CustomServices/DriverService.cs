@@ -54,14 +54,7 @@ namespace ServiceLayer.CustomServices
         {
             try
             {
-                if (driver != null)
-                {
-                    await _driverRepository.Insert(driver);
-                }
-                else
-                {
-                    throw new ArgumentNullException(nameof(driver));
-                }
+                await _driverRepository.Insert(driver);
             }
             catch (Exception ex)
             {

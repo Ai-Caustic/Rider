@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using TransferLayer.DTOS;
 using System.Threading.Tasks;
 
 namespace DomainLayer.IRepository
@@ -16,9 +17,13 @@ namespace DomainLayer.IRepository
 
         Task Insert(User user);
 
-        Task Update(User user);
+        Task Update(Guid userId);
 
-        Task Remove(User user);
+        Task Remove(Guid userId);
+
+        User MapUserDTO(UserDTO userDTO);
+
+        UserDTO MapUser(User user);
 
         Task<List<User>> Search(string query);
 
