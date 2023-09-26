@@ -18,7 +18,7 @@ namespace DataLayer.Configuration
             builder.HasKey(l => l.Id);
 
             builder.Property(p => p.Id)
-                .HasColumnName("LocationId");
+                .HasColumnName("Id");
 
             builder.HasAlternateKey(p => new { p.Name });    
 

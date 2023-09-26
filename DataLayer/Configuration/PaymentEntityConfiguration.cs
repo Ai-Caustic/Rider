@@ -22,7 +22,7 @@ namespace DataLayer.Configuration
                    .HasForeignKey(p => p.UserId);
 
             builder.Property(p => p.Id)
-                .HasColumnName("PaymentId");
+                .HasColumnName("Id");
 
             builder.Property(p => p.PaymentMethod)
                 .IsRequired();

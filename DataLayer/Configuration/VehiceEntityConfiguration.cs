@@ -18,7 +18,7 @@ namespace DataLayer.Configuration
             builder.HasKey(v => v.Id);
 
             builder.Property(v => v.Id)
-                .HasColumnName("VehicleId");
+                .HasColumnName("Id");
 
             builder.HasOne(v => v.Ride)
                 .WithOne(r => r.Vehicle)
