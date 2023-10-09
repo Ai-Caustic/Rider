@@ -4,6 +4,7 @@ using DataLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataLayer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231005073332_DriverUpdate")]
+    partial class DriverUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -170,8 +173,13 @@ namespace DataLayer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Destination")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("DestinationLatitude")
+                        .HasColumnType("decimal(8, 6)");
+
+                    b.Property<decimal>("DestinationLongitude")
+                        .HasColumnType("decimal(9, 6)");
 
                     b.Property<Guid?>("DriverId")
                         .HasColumnType("uniqueidentifier");
@@ -182,15 +190,20 @@ namespace DataLayer.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("PaymentId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<decimal>("PickUpLatitude")
+                        .HasColumnType("decimal(8, 6)");
+
+                    b.Property<decimal>("PickUpLongitude")
+                        .HasColumnType("decimal(9, 6)");
 
                     b.Property<string>("PickupLocation")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("RideFare")
                         .HasColumnType("smallmoney");
+
+                    b.Property<Guid?>("RideId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime");
@@ -209,7 +222,7 @@ namespace DataLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DriverId");
+                    b.HasIndex("RideId");
 
                     b.HasIndex("UserId");
 
@@ -356,7 +369,7 @@ namespace DataLayer.Migrations
                 {
                     b.HasOne("DomainLayer.Models.Driver", "Driver")
                         .WithMany("Rides")
-                        .HasForeignKey("DriverId");
+                        .HasForeignKey("RideId");
 
                     b.HasOne("DomainLayer.Models.User", "User")
                         .WithMany("Rides")

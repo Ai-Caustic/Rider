@@ -28,7 +28,7 @@ namespace DataLayer.Configuration
                    .HasForeignKey(v => v.DriverId);   
 
 
-            builder.HasAlternateKey(d => new { d.Email, d.PhoneNumber });
+            builder.HasAlternateKey(d => new { d.Email, d.Mobile });
 
             builder.Property(d => d.FirstName)
                 .IsRequired()
@@ -42,7 +42,7 @@ namespace DataLayer.Configuration
                 .IsRequired()
                 .HasMaxLength(255);
 
-            builder.Property(d => d.PhoneNumber)
+            builder.Property(d => d.Mobile)
                 .IsRequired()
                 .HasMaxLength(10);
 

@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TransferLayer.DTOS;
+using AutoMapper;
+using Microsoft.Extensions.Logging;
 
 namespace RepositoryLayer.Repository
 {
@@ -14,9 +17,15 @@ namespace RepositoryLayer.Repository
     {
         private readonly ApplicationDbContext _context;
 
-        public VehicleRepository(ApplicationDbContext context)
+        private readonly IMapper _mapper;
+
+        private readonly ILogger<VehicleRepository> _logger;
+
+        public VehicleRepository(ApplicationDbContext context, IMapper mapper, ILogger<VehicleRepository> logger)
         {
             _context = context;
+            _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<List<Vehicle>> GetAllVehicles()
@@ -31,32 +40,84 @@ namespace RepositoryLayer.Repository
 
         public async Task Insert(Vehicle vehicle)
         {
-            if (vehicle == null)
+            try
             {
-                throw new ArgumentNullException(nameof(vehicle));
+                if (vehicle != null)
+                {
+                    bool vehicleExists = await _context.Vehicles.AnyAsync(v => v.Id == vehicle.Id);
+                    if (vehicleExists)
+                    {
+                        _logger.LogError("Vehicle already exists");
+                    }
+                    else
+                    {
+                       Vehicle newVehicle = Vehicle.Create(vehicle.DriverId, vehicle.Model, vehicle.Color, vehicle.NumberOfSeats, vehicle.LicensePlate, vehicle.VehiclePhotoUrl, vehicle.InsurancePhotoUrl);
+                       await _context.Vehicles.AddAsync(newVehicle);
+                       await _context.SaveChangesAsync();
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Driver is null");
+                }
             }
-            _context.Add(vehicle);
-            await _context.SaveChangesAsync();
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exeption: {ex.InnerException}");
+            }
         }
 
-        public async Task Update(Vehicle vehicle)
+        public async Task Update(Guid vehicleId, Vehicle updatedVehicle)
         {
-            if (vehicle == null)
+            try
             {
-                throw new ArgumentNullException(nameof(vehicle));
+                var vehicle = await _context.Vehicles.SingleOrDefaultAsync(d => d.Id == vehicleId);
+                if (vehicle != null)
+                {
+                    vehicle.Id = vehicle.Id;
+                    vehicle.DriverId = updatedVehicle.DriverId;
+                    vehicle.Model = updatedVehicle.Model;
+                    vehicle.Color = updatedVehicle.Color;
+                    vehicle.NumberOfSeats = updatedVehicle.NumberOfSeats;
+                    vehicle.VehiclePhotoUrl = updatedVehicle.VehiclePhotoUrl;
+                    vehicle.InsurancePhotoUrl = updatedVehicle.InsurancePhotoUrl;
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    _logger.LogError("Vehicle not found");
+                }
             }
-            _context.Update(vehicle);
-            await _context.SaveChangesAsync();
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
         }
 
-        public async Task Remove(Vehicle vehicle)
+        public async Task Remove(Guid vehicleId)
         {
-            if (vehicle == null)
+            try
             {
-                throw new ArgumentNullException(nameof(vehicle));
+                var vehicle = await _context.Vehicles.SingleOrDefaultAsync(d => d.Id == vehicleId);
+                if(vehicle != null)
+                {
+                    _context.Vehicles.Remove(vehicle);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    _logger.LogError("Driver not found");
+                }
             }
-            _context.Remove(vehicle);
-            await _context.SaveChangesAsync();
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
+        }
+
+        public Vehicle MapVehicleDTO(VehicleDTO vehicleDTO)
+        {
+            return _mapper.Map<Vehicle>(vehicleDTO); 
         }
 
         public async Task<Vehicle> SearchPlate(string plateNo)

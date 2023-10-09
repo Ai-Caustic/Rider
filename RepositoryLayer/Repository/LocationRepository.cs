@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
+using Microsoft.Extensions.Logging;
+using TransferLayer.DTOS;
 
 namespace RepositoryLayer.Repository
 {
@@ -14,9 +17,15 @@ namespace RepositoryLayer.Repository
     {
         private readonly ApplicationDbContext _context;
 
-        public LocationRepository(ApplicationDbContext context)
+        private readonly IMapper _mapper;
+
+        private readonly ILogger<LocationRepository> _logger;
+
+        public LocationRepository(ApplicationDbContext context, IMapper mapper, ILogger<LocationRepository> logger)
         {
             _context = context;
+            _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<List<Location>> GetAllLocations()
@@ -31,32 +40,86 @@ namespace RepositoryLayer.Repository
 
         public async Task Insert(Location location)
         {
-            if(location == null)
+            try
             {
-                throw new ArgumentNullException(nameof(location));
+                if(location != null)
+                {
+                    bool locationExists = await _context.Locations.AnyAsync(l => l.Id == location.Id);
+                    if(locationExists)
+                    {
+                        _logger.LogError("Location already exists");
+                        return;
+                    }
+                    else
+                    {
+                        Location newLocation = Location.Create(location.Name, location.Latitude, location.Longitude, DateTime.Now, true);
+                        await _context.Locations.AddAsync(newLocation);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Location is null");
+                }
+            } 
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
             }
-            await _context.AddAsync(location);
-            await _context.SaveChangesAsync();  
         }
 
-        public async Task Update(Location location)
+        public async Task Update(Guid locationId, Location updatedLocation)
         {
-            if(location == null)
+            try
             {
-                throw new ArgumentNullException(nameof(location));
+                var location = await _context.Locations.SingleOrDefaultAsync(l => l.Id == locationId);
+                if(location != null)
+                {
+                    location.Id = location.Id;
+                    location.Name = updatedLocation.Name;
+                    location.Latitude = updatedLocation.Latitude;
+                    location.Longitude = updatedLocation.Longitude;
+                    location.IsActive = updatedLocation.IsActive;
+                    location.UpdatedAt = DateTime.Now;
+
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    _logger.LogError("Location not found");
+                }
+
             }
-            _context.Update(location);
-            await _context.SaveChangesAsync();
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
         }
 
-        public async Task Remove(Location location)
+        public async Task Remove(Guid locationId)
         {
-            if(location == null)
+            try
             {
-                throw new ArgumentNullException(nameof(location));
+                var location = await _context.Locations.SingleOrDefaultAsync(l => l.Id == locationId);
+                if(location != null)
+                {
+                    _context.Locations.Remove(location);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    _logger.LogError("Location not found");
+                }
             }
-            _context.Remove(location);
-            await _context.SaveChangesAsync();
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
+        }
+
+        public Location MapLocationDTO(LocationDTO locationDTO)
+        {
+            return _mapper.Map<Location>(locationDTO);
         }
     }
 }

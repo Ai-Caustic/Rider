@@ -8,107 +8,210 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DomainLayer.IRepository;
+using TransferLayer.DTOS;
 using Microsoft.Extensions.Logging;
+using AutoMapper;
 
 namespace ServiceLayer.CustomServices
 {
     public class RideService : IRideService
     {
-        private readonly IRideRepository _rideRepository; //TODO: All Services inherit the repository interface not class
+        private readonly IRideRepository _rideRepository;
 
         private readonly ILogger<RideService> _logger;
-        public RideService(IRideRepository rideRepository, ILogger<RideService> logger)
+
+        private readonly IMapper _mapper;
+        public RideService(IRideRepository rideRepository, ILogger<RideService> logger, IMapper mapper)
         {
             _rideRepository = rideRepository;
             _logger = logger;
+            _mapper = mapper;
         }
 
-        public async Task GetAllRides()
+        public async Task<List<RideDTO>> GetAllRides()
         {
             try
             {
-                await _rideRepository.GetAllRides();
+                var rides = await _rideRepository.GetAllRides();
+                if(rides == null)
+                {
+                    _logger.LogError($"Could not get rides");
+                }
+                else
+                {
+                    var result = _mapper.Map<List<RideDTO>>(rides);
+                    return result;
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
+            return null;
         }
 
-        public async Task GetRideById(Guid Id)
+        public async Task<RideDTO> GetRideById(Guid Id)
         {
             try
             {
-                await _rideRepository.GetRideById(Id);
+                var ride = await _rideRepository.GetRideById(Id);
+                if (ride == null)
+                {
+                    _logger.LogError("Could not find ride");
+                } 
+                else
+                {
+                    var result = _mapper.Map<RideDTO>(ride);
+                    return result;
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
+            return null;
         }
 
-        public async Task CreateRide(Ride ride)
+        public async Task<bool> CreateRide(RideDTO rideDTO)
         {
             try
             {
-                await _rideRepository.Insert(ride);
+                if(rideDTO == null)
+                {
+                    _logger.LogError("Ride cannot be null");
+                    return false;
+                }
+                else
+                {
+                    var ride = _rideRepository.MapRideDTO(rideDTO);
+                    await _rideRepository.Insert(ride);
+                    return true;
+                }
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
         }
 
-        public async Task UpdateRide(Ride ride)
+        public async Task<bool> UpdateRide(Guid rideId, RideDTO rideDTO)
         {
             try
             {
-                await _rideRepository.Update(ride);
+                var ride = await _rideRepository.GetRideById(rideId);
+                if(ride == null)
+                {
+                    _logger.LogError("Ride not found");
+                    return false;
+                }
+                else
+                {
+                    var mappedRide = _rideRepository.MapRideDTO(rideDTO);
+                    await _rideRepository.Update(rideId, mappedRide);
+                    _logger.LogInformation("Updated ride");
+                    return true;
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
         }
 
-        public async Task CancelRide(Guid rideId)
+        public async Task<bool> DeleteRide(Guid rideId)
         {
             try
             {
-                await _rideRepository.CancelRide(rideId);
+                var ride = await _rideRepository.GetRideById(rideId);
+                if(ride == null)
+                {
+                    _logger.LogError("User not found");
+                    return false;
+                }
+                else
+                {
+                    await _rideRepository.Remove(rideId);
+                    return true;
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
+            }
+        }
+
+        public async Task<bool> CancelRide(Guid rideId)
+        {
+            try
+            {
+                var ride = await _rideRepository.GetRideById(rideId);
+                if (ride == null)
+                {
+                    _logger.LogError("Ride not found");
+                    return false;
+                }
+                else
+                {
+                    await _rideRepository.CancelRide(rideId);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
 
         }
 
-        public async Task GetRidesByUserId(Guid userId)
+        public async Task<List<RideDTO>> GetRidesByUserId(Guid userId)
         {   
             try
             {
-                await _rideRepository.GetUserRides(userId);
+                var rides = await _rideRepository.GetUserRides(userId);
+                if(rides == null)
+                {
+                    _logger.LogError($"Could not find rides for user {userId}");
+                    return null;
+                }
+                else
+                {
+                    var result = _mapper.Map<List<RideDTO>>(rides);
+                    return result;
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
-
+            return null;
         }
 
-        public async Task GetRidesByDriverId(Guid driverId)
+        public async Task<List<RideDTO>> GetRidesByDriverId(Guid driverId)
         {
             try
             {
-                await _rideRepository.GetDriverRides(driverId);
+                var rides = await _rideRepository.GetDriverRides(driverId);
+                if(rides == null)
+                {
+                    _logger.LogError($"Could not find rides for driver{driverId}");
+                    return null;
+                }
+                else
+                {
+                    var result = _mapper.Map<List<RideDTO>>(rides);
+                    return result;
+                }
+                
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
-
+            return null;
         }
-
     }
 }

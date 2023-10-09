@@ -14,6 +14,24 @@ namespace DomainLayer.Models
         public required double Latitude { get; set; }
 
         public required double Longitude { get; set; }
+        
+        public Location() {}
+
+        public static Location Create(string name, double latitude, double longitude, DateTime createdAt, bool isActive)
+        {
+            var location = new Location
+            {
+                Name = name,
+                Latitude = latitude,
+                Longitude = longitude,
+                CreatedAt = createdAt,
+                IsActive = isActive
+            };
+
+            location.GenerateNewIdentity();
+
+            return location;
+        }
 
     }
 }

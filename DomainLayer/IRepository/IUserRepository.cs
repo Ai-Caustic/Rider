@@ -17,13 +17,11 @@ namespace DomainLayer.IRepository
 
         Task Insert(User user);
 
-        Task Update(Guid userId);
+        Task Update(Guid userId, User updatedUser);
 
         Task Remove(Guid userId);
 
         User MapUserDTO(UserDTO userDTO);
-
-        UserDTO MapUser(User user);
 
         Task<List<User>> Search(string query);
 
@@ -31,7 +29,7 @@ namespace DomainLayer.IRepository
 
         Task<List<Payment>> GetUserPayments(Guid userId);
 
-        Task BookRide(Guid userId, Ride ride);
+        //Task BookRide(Guid userId, Ride ride);
 
         Task CancelRide(Guid rideId);
     }

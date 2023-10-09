@@ -29,6 +29,24 @@ namespace DomainLayer.Models
 
         public virtual Ride ? Ride { get; set; }
 
+        public Vehicle() {}
 
+        public static Vehicle Create(Guid driverId, string model, string color, int numberOfSeats, string licensePlate, string vehiclePhotoUrl, string insurancePhotoUrl)
+        {
+            var vehicle = new Vehicle()
+            {
+                DriverId = driverId,
+                Model = model,
+                Color = color,
+                NumberOfSeats = numberOfSeats,
+                LicensePlate = licensePlate,
+                VehiclePhotoUrl = vehiclePhotoUrl,
+                InsurancePhotoUrl = insurancePhotoUrl
+            };
+
+            vehicle.GenerateNewIdentity();
+            
+            return vehicle;
+        }
     }
 }

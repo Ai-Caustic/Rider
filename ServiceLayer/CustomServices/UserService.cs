@@ -36,8 +36,15 @@ namespace ServiceLayer.CustomServices
             {
                 var users = await _userRepository.GetAllUsers();
 
-                return _mapper.Map<List<UserDTO>>(users);
-                
+                if (users == null)
+                {
+                    _logger.LogError("Could not get users");
+                }
+                else
+                {
+                    var result = _mapper.Map<List<UserDTO>>(users);
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -52,8 +59,15 @@ namespace ServiceLayer.CustomServices
             try
             {
                 var user = await _userRepository.GetUserById(Id);
-                
-                return _mapper.Map<UserDTO>(user);
+                if (user == null)
+                {
+                    _logger.LogError("Could not find user");
+                }
+                else
+                {
+                    var result = _mapper.Map<UserDTO>(user);
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -67,10 +81,18 @@ namespace ServiceLayer.CustomServices
         {
             try
             {
-                var id = new Guid();
-                var user = _userRepository.MapUserDTO(userDTO);
-                await _userRepository.Insert(user);
-                return true;
+                if(userDTO == null)
+                {
+                    _logger.LogError("User cannot be null");
+                    return false;
+                }
+                else
+                {
+                    var user = _userRepository.MapUserDTO(userDTO);
+                    await _userRepository.Insert(user);
+                    _logger.LogInformation("User created successfully");
+                    return true;
+                }
             }
             catch(Exception ex)
             {
@@ -79,17 +101,22 @@ namespace ServiceLayer.CustomServices
             }
         }
 
-        public async Task<bool> UpdateUser(Guid userId)
+        public async Task<bool> UpdateUser(Guid userId, UserDTO updatedUser)
         {
             try
             {
                 var user = await _userRepository.GetUserById(userId);
-                if(user == null)
+                if (user == null)
                 {
-                    throw new ArgumentNullException("User");
+                    _logger.LogError("User not found");
+                    return false;
                 }
-                await _userRepository.Update(userId);
-                return true;
+                else
+                {
+                    var mappedUser = _userRepository.MapUserDTO(updatedUser);
+                    await _userRepository.Update(userId, mappedUser);
+                    return true;
+                }
             }
             catch (Exception ex)
             {
@@ -105,10 +132,14 @@ namespace ServiceLayer.CustomServices
                 var user = await _userRepository.GetUserById(userId);
                 if(user == null)
                 {
-                    throw new ArgumentNullException("user");
+                    _logger.LogError("User not found");
+                    return false;
                 }
-                await _userRepository.Remove(userId); // Change here
-                return true;
+                else
+                {
+                    await _userRepository.Remove(userId);
+                    return true;
+                }
             }
             catch (Exception ex)
             {
@@ -122,8 +153,15 @@ namespace ServiceLayer.CustomServices
             try
             {
                 var results = await _userRepository.Search(searchItem);
-
-                return _mapper.Map<List<UserDTO>>(results);
+                if(results == null)
+                {
+                    _logger.LogError($"Could not find users with {searchItem}");
+                }
+                else
+                {
+                    var result =  _mapper.Map<List<UserDTO>>(results);
+                    return result;
+                }
             }
             catch(Exception ex)
             {
@@ -160,19 +198,19 @@ namespace ServiceLayer.CustomServices
             }
         }
 
-        public async Task<bool> BookRide(Guid userId, Ride ride)
-        {   
-            try
-            {
-                await _userRepository.BookRide(userId, ride);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
-                return false;
-            }
-        }
+        //public async Task<bool> BookRide(Guid userId, Ride ride)
+        //{   
+        //    try
+        //    {
+        //        await _userRepository.BookRide(userId, ride);
+        //        return true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+        //        return false;
+        //    }
+        //}
 
         public async Task<bool> CancelRide(Guid rideId)
         {

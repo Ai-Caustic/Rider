@@ -28,7 +28,7 @@ namespace DataLayer.Configuration
                 .WithOne(p => p.User)
                 .HasForeignKey(p => p.UserId);
 
-            builder.HasAlternateKey(u => new { u.Email, u.IdNumber, u.PhoneNumber });
+            builder.HasAlternateKey(u => new { u.Email, u.IdNumber, u.Mobile });
 
             builder.Property(u => u.Email)
                 .IsRequired()
@@ -42,20 +42,20 @@ namespace DataLayer.Configuration
                 .IsRequired()
                 .HasMaxLength(8);
 
-            builder.Property(u => u.PhoneNumber)
+            builder.Property(u => u.Mobile)
                 .IsRequired()
-                .HasMaxLength(10);
+                .HasMaxLength(15);
 
             builder.Property(u => u.IdPhotoUrl)
                 .IsRequired();
             
-            var converter = new ValueConverter<DateOnly, DateTime>(
+            var dateConverter = new ValueConverter<DateOnly, DateTime>(
                 u => u.ToDateTime(default), // Convert DateOnly to DateTime
                 u => DateOnly.FromDateTime(u) // Convert DateTime to DateOnly
             );
 
             builder.Property(u => u.BirthDate)
-                .HasConversion(converter); // Make sure the column is a date
+                .HasConversion(dateConverter); // Make sure the column is a date
         }
     }
 }

@@ -21,7 +21,7 @@ namespace DataLayer.Configuration
 
             builder.HasOne(r => r.Driver)
                    .WithMany(d => d.Rides)
-                   .HasForeignKey(r => r.RideId);
+                   .HasForeignKey(r => r.DriverId);
 
             builder.HasOne(r => r.Vehicle)
                    .WithOne(v => v.Ride)
@@ -36,22 +36,11 @@ namespace DataLayer.Configuration
                    .WithMany(u => u.Rides)
                    .HasForeignKey(r => r.UserId); 
 
-            builder.Property(r => r.PickUpLatitude)
-                .HasColumnType("decimal(8, 6)")
+            builder.Property(r => r.PickupLocation)
                 .IsRequired();
 
-            builder.Property(r => r.PickUpLongitude)
-                .HasColumnType("decimal(9, 6)")
+            builder.Property(r => r.Destination)
                 .IsRequired();
-            
-            builder.Property(r => r.DestinationLatitude)
-                .HasColumnType("decimal(8, 6)")
-                .IsRequired();
-
-            builder.Property(r => r.DestinationLongitude)
-                .HasColumnType("decimal(9, 6)")
-                .IsRequired();
-
             
             builder.Property(r => r.StartTime)
                 .IsRequired()
@@ -64,9 +53,6 @@ namespace DataLayer.Configuration
             builder.Property(r => r.RideFare)
                 .IsRequired()
                 .HasColumnType("smallmoney");
-
-
-
         }
     }
 }

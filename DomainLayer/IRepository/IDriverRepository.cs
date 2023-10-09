@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TransferLayer.DTOS;
 
 namespace DomainLayer.IRepository
 {
@@ -19,9 +20,11 @@ namespace DomainLayer.IRepository
 
         Task Insert(Driver driver);
 
-        Task Update(Driver driver);
+        Task Update(Guid driverId, Driver updatedDriver);
 
-        Task Remove(Driver driver);
+        Task Remove(Guid driverId);
+
+        Driver MapDriverDTO(DriverDTO driverDTO);
 
         Task AssignVehicle(Guid driverId, Guid vehicleId);
 

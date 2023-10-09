@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using DomainLayer.IRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using AutoMapper;
+using TransferLayer.DTOS;
 
 namespace ServiceLayer.CustomServices
 {
@@ -18,140 +20,224 @@ namespace ServiceLayer.CustomServices
 
         private readonly ILogger<DriverService> _logger;
 
+        private readonly IMapper _mapper;
 
-        public DriverService(IDriverRepository driverRepository, ILogger<DriverService> logger)
+
+        public DriverService(IDriverRepository driverRepository, ILogger<DriverService> logger, IMapper mapper)
         {
             _driverRepository = driverRepository;
             _logger = logger;
+            _mapper = mapper;
 
         }
 
-        public async Task GetAllDrivers()
+        public async Task<List<DriverDTO>> GetAllDrivers()
         {
             try
             {
-                await _driverRepository.GetAllDrivers();
+                var drivers = await _driverRepository.GetAllDrivers();
+
+                var result = _mapper.Map<List<DriverDTO>>(drivers);
+
+                return result;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
+            return null;
         }
 
-        public async Task GetDriverById(Guid Id)
+        public async Task<DriverDTO> GetDriverById(Guid Id)
         {
             try
             {
-                await _driverRepository.GetDriverById(Id);
+                var driver = await _driverRepository.GetDriverById(Id);
+                if (driver == null)
+                {
+                    _logger.LogError("Could not find driver");
+                }
+                else
+                {
+                    var result = _mapper.Map<DriverDTO>(driver);
+                    return result; 
+                }
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
+            return null;
         }
 
-        public async Task CreateDriver(Driver driver)
+        public async Task<bool> CreateDriver(DriverDTO driverDTO)
         {
             try
             {
-                await _driverRepository.Insert(driver);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
-            }
-        }
-
-        public async Task UpdateDriver(Driver driver)
-        {
-            try
-            {
-                if (driver != null)
+                if(driverDTO == null)
                 {
-                    await _driverRepository.Update(driver);
+                    _logger.LogError("Driver cannot be null");
+                    return false;
+                }
+                else
+                {
+                    var driver = _driverRepository.MapDriverDTO(driverDTO);
+                    await _driverRepository.Insert(driver);
+                    return true;
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
         }
 
-        public async Task DeleteDriver(Driver driver)
+        public async Task<bool> UpdateDriver(Guid driverId, DriverDTO driverDTO)
         {
             try
             {
-                if (driver != null)
+                var driver = await _driverRepository.GetDriverById(driverId);
+                if (driver == null)
                 {
-                    await _driverRepository.Remove(driver);
+                    _logger.LogError("Driver not found");
+                    return false;
+                }
+                else
+                {
+                    var mappedDriver = _driverRepository.MapDriverDTO(driverDTO);
+                    await _driverRepository.Update(driverId, mappedDriver);
+                    _logger.LogInformation("Updated driver");
+                    return true;
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteDriver(Guid driverId)
+        {
+            try
+            {
+                var driver = await _driverRepository.GetDriverById(driverId);
+                if (driver == null)
+                {
+                    _logger.LogError("Driver not found");
+                    return false;
+                }
+                else
+                {
+                    await _driverRepository.Remove(driverId);
+                    _logger.LogInformation("Deleted location");
+                    return true;
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
         }
 
-
-        //start here
-        public async Task AssignVehicleToDriver(Guid driverId, Guid vehicleId)
+        public async Task<bool> AssignVehicleToDriver(Guid driverId, Guid vehicleId)
         {
             try
             {
-                await _driverRepository.AssignVehicle(driverId, vehicleId); 
+                await _driverRepository.AssignVehicle(driverId, vehicleId);
+                _logger.LogInformation($"Assigned vehicle {vehicleId} to driver {driverId}"); 
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
             }
         }
 
-        public async Task UnassignVehicleFromDriver(Guid driverId, Guid vehicleId)
+        public async Task<bool> UnassignVehicleFromDriver(Guid driverId, Guid vehicleId)
         {
             try
             {
                 await _driverRepository.UnassignVehicle(driverId, vehicleId);
+                _logger.LogInformation($"Unassigned vehicle {vehicleId} from driver {driverId}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
+                return false;
+            }
+        }
+
+        public async Task<List<DriverDTO>> SearchDrivers(string searchItem)
+        {
+            try
+            {
+                var results = await _driverRepository.Search(searchItem);
+                if(results == null)
+                {
+                    _logger.LogError($"Could not find results with {searchItem}");
+                }
+                else
+                {
+                    var result = _mapper.Map<List<DriverDTO>>(results);
+                    return result;
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
             }
+            return null;
         }
 
-        public async Task SearchDriver(string searchItem)
+        public async Task<List<VehicleDTO>> GetDriverVehicles(Guid driverId)
         {
             try
             {
-                await _driverRepository.Search(searchItem);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");
-            }
-        }
+                var vehicles = await _driverRepository.GetDriverVehicles(driverId);
+                if(vehicles == null)
+                {
+                    _logger.LogError($"No vehicles found for driver {driverId}");
+                }
+                else
+                {
+                    var mappedVehicles = _mapper.Map<List<VehicleDTO>>(vehicles);
 
-        public async Task GetDriverVehicles(Guid driverId)
-        {
-            try
-            {
-                await _driverRepository.GetDriverVehicles(driverId);
+                    return mappedVehicles;
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}"); 
             }
+            return null;
         }
-
-        public async Task GetDriverRideHistory(Guid driverId)
+    
+        public async Task<List<RideDTO>> GetDriverRideHistory(Guid driverId)
         {
             try
             {
-                await _driverRepository.GetDriverRides(driverId);
+                var rides = await _driverRepository.GetDriverRides(driverId);
+                if (rides == null)
+                {
+                    _logger.LogError($"No rides found for driver {driverId}");
+                }
+                else
+                {
+                    var mappedRides = _mapper.Map<List<RideDTO>>(rides);
+
+                    return mappedRides;
+                }
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}, Exception: {ex.InnerException}");  
             }
+            return null;
         }
 
         public async Task StartRide(Guid driverId, Guid rideId, Guid vehicleId)

@@ -21,5 +21,24 @@ namespace DomainLayer.Models
         public virtual User User { get; set; }
 
         public virtual Ride Ride { get; set; }
+
+        // Empty constructor
+        public Payment() {}
+
+        public static Payment Create(Guid userId, Guid rideId, string paymentMethod, double paymentAmount, DateTime timeStamp)
+        {
+            var payment = new Payment
+            {
+                UserId = userId,
+                RideId = rideId,
+                PaymentMethod = paymentMethod,
+                PaymentAmount = paymentAmount,
+                TimeStamp = timeStamp
+            };
+
+            payment.GenerateNewIdentity();
+
+            return payment;
+        }
     }
 }

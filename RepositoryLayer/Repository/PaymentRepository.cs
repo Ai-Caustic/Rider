@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using AutoMapper;
+using TransferLayer.DTOS;
 
 namespace RepositoryLayer.Repository
 {
@@ -14,9 +17,15 @@ namespace RepositoryLayer.Repository
     {
         private readonly ApplicationDbContext _context;
 
-        public PaymentRepository(ApplicationDbContext context)
+        private readonly ILogger<PaymentRepository> _logger;
+
+        private readonly IMapper _mapper;
+
+        public PaymentRepository(ApplicationDbContext context, ILogger<PaymentRepository> logger, IMapper mapper)
         {
             _context = context;
+            _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<List<Payment>> GetAllPayments()
@@ -31,32 +40,82 @@ namespace RepositoryLayer.Repository
 
         public async Task Insert(Payment payment)
         {
-            if (payment == null)
-            {
-                throw new ArgumentNullException(nameof(payment));
-            }
-            _context.Add(payment);
-            await _context.SaveChangesAsync();
+           try
+           {
+                if(payment != null)
+                {
+                    bool paymentExists = await _context.Payments.AnyAsync(p => p.Id == payment.Id);
+                    if(paymentExists)
+                    {
+                        _logger.LogError("Payment with similar Id exists");
+                    }
+                    else
+                    {
+                        await _context.Payments.AddAsync(payment);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Payment cannot be null");
+                }
+           }
+           catch (Exception ex)
+           {
+                _logger.LogError($"Error {ex.Message} Exception: {ex.InnerException}");
+           }
         }
 
-        public async Task Update(Payment payment)
+        public async Task Update(Guid paymentId,Payment updatedPayment)
         {
-            if (payment == null)
+            try
             {
-                throw new ArgumentNullException(nameof(payment));
+                var payment = await _context.Payments.SingleOrDefaultAsync(p => p.Id == paymentId);
+                if(payment != null)
+                {
+                    payment.Id = payment.Id;
+                    payment.PaymentAmount = updatedPayment.PaymentAmount;
+                    payment.PaymentMethod = updatedPayment.PaymentMethod;
+                    payment.TimeStamp = updatedPayment.TimeStamp;
+                    payment.UpdatedAt = DateTime.Now;
+
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    _logger.LogError("Payment not found");
+                }
             }
-            _context.Add(payment);
-            await _context.SaveChangesAsync();
+            catch(DbUpdateException ex)
+            {
+                _logger.LogError($"Error {ex.Message} Exception: {ex.InnerException}");
+            }
         }
 
-        public async Task Remove(Payment payment)
+        public async Task Remove(Guid paymentId)
         {
-            if (payment == null)
+            try
             {
-                throw new ArgumentNullException(nameof(payment));
+                var payment = await _context.Payments.SingleOrDefaultAsync(p => p.Id == paymentId);
+                if(payment != null)
+                {
+                    _context.Payments.Remove(payment);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    _logger.LogError("Payment not found");
+                }
             }
-            _context.Remove(payment);
-            await _context.SaveChangesAsync();
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error {ex.Message} Exception: {ex.InnerException}");
+            }
+        }
+
+        public Payment MapPaymentDTO(PaymentDTO paymentDTO)
+        {
+            return _mapper.Map<Payment>(paymentDTO);
         }
 
         public async Task<List<Payment>> GetUserPayments(Guid userId)

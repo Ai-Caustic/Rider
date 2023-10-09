@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DomainLayer.Models;
+using TransferLayer.DTOS;
 
 namespace DomainLayer.IRepository
 {
@@ -14,10 +15,12 @@ namespace DomainLayer.IRepository
         Task<Payment> GetPaymentById(Guid id);
 
         Task Insert(Payment payment);
+        
+        Task Update(Guid paymentId, Payment updatedPayment);
 
-        Task Update(Payment payment);
+        Task Remove(Guid paymentId);
 
-        Task Remove(Payment payment);
+        Payment MapPaymentDTO(PaymentDTO paymentDTO);
 
         Task<List<Payment>> GetUserPayments(Guid userId);
 

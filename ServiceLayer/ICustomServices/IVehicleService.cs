@@ -4,27 +4,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TransferLayer.DTOS;
 
 namespace ServiceLayer.ICustomServices
 {
     public interface IVehicleService
     {
-        Task GetAllVehicles();
+        Task<List<VehicleDTO>> GetAllVehicles();
 
-        Task GetVehicleById(Guid id);
+        Task<VehicleDTO> GetVehicleById(Guid id);
 
-        Task GetVehicleByPlate(string licensePlate);
+        Task<VehicleDTO> GetVehicleByPlate(string licensePlate);
 
-        Task CreateVehicle(Vehicle vehicle);
+        Task<bool> CreateVehicle(VehicleDTO vehicleDTO);
 
-        Task UpdateVehicle(Vehicle vehicle);
+        Task<bool> UpdateVehicle(Guid vehicleId, VehicleDTO updatedVehicle);
 
-        Task DeleteVehicle(Vehicle vehicle);
+        Task<bool> DeleteVehicle(Guid vehicleId);
 
-        Task SearchVehicles(string searchItem);
+        Task<List<VehicleDTO>> GetVehicleBySeats(int numberOfSeats);
 
-        Task GetVehicleDriver(Guid vehicleId);
+        Task<DriverDTO> GetVehicleDriver(Guid vehicleId);
 
-        Task GetVehicleRideHistory(Guid vehicleId);
+        //TODO: Add RideDTO 
+        Task<List<RideDTO>> GetVehicleRideHistory(Guid vehicleId);
     }
 }

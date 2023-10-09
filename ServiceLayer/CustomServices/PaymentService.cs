@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using DomainLayer.IRepository;
 using Microsoft.Extensions.Logging;
+using AutoMapper;
+using TransferLayer.DTOS;
+using Microsoft.Identity.Client;
 
 namespace ServiceLayer.CustomServices
 {
@@ -17,82 +20,198 @@ namespace ServiceLayer.CustomServices
 
         private readonly ILogger<PaymentService> _logger;
 
-        public PaymentService(IPaymentRepository paymentRepository, ILogger<PaymentService> logger)
+        private readonly IMapper _mapper;
+
+        public PaymentService(IPaymentRepository paymentRepository, ILogger<PaymentService> logger, IMapper mapper)
         {
             _paymentRepository = paymentRepository;
             _logger = logger;
+            _mapper = mapper;
         }
 
-        public async Task GetAllPayments()
+        public async Task<List<PaymentDTO>> GetAllPayments()
         {
             try
             {
-                await _paymentRepository.GetAllPayments();
+                var payments = await _paymentRepository.GetAllPayments();
+                if(payments != null)
+                {
+                    var result = _mapper.Map<List<PaymentDTO>>(payments);
+
+                    return result;
+                }
+                else
+                {
+                    _logger.LogError("Payments not found");
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
             }
+            return null;
         }
 
-        public async Task GetPaymentById(Guid Id)
+        public async Task<PaymentDTO> GetPaymentById(Guid Id)
         {
             try
             {
-                await _paymentRepository.GetPaymentById(Id);
+                var payment = await _paymentRepository.GetPaymentById(Id);
+                if (payment == null)
+                {
+                    _logger.LogError("Could not find payment");
+                }
+                else
+                {
+                    var result = _mapper.Map<PaymentDTO>(payment);
+
+                    return result;
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
             }
+            return null;
         }
 
-        public async Task CreatePayment(Payment payment)
+        public async Task<bool> CreatePayment(PaymentDTO paymentDTO)
         {
             try
             {
-                await _paymentRepository.Insert(payment);
+                if(paymentDTO == null)
+                {
+                    _logger.LogError("Payment cannot be null");
+                    return false;
+                }
+                else
+                {
+                    var payment = _paymentRepository.MapPaymentDTO(paymentDTO);
+                    await _paymentRepository.Insert(payment);
+                    return true;
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdatePayment(Guid paymentId, PaymentDTO updatedPayment)
+        {
+            try
+            {
+                var payment = await _paymentRepository.GetPaymentById(paymentId);
+                if(payment == null)
+                {
+                    _logger.LogError("Payment not found");
+                    return false;
+                }
+                else
+                {
+                    var mappedPayment = _paymentRepository.MapPaymentDTO(updatedPayment);
+                    await _paymentRepository.Update(paymentId,mappedPayment);
+                    _logger.LogInformation("Updated payment");
+                    return true;
+                }
+
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+                return false;
+            }
+        }
+
+        public async Task<bool> DeletePayment(Guid paymentId)
+        {
+            try
+            {
+                var payment = await _paymentRepository.GetPaymentById(paymentId);
+                if(payment == null)
+                {
+                    _logger.LogError("Payment not found");
+                    return false;
+                }
+                else
+                {
+                    await _paymentRepository.Remove(paymentId);
+                    return true;
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+                return false;
+            }
+        }
+
+        public async Task<List<PaymentDTO>> GetUserPayments(Guid userId)
+        {
+            try
+            {
+                var results = await _paymentRepository.GetUserPayments(userId);
+                if(results == null)
+                {
+                    _logger.LogError($"No payments found for user {userId}");
+                }
+                else
+                {
+                    var payments = _mapper.Map<List<PaymentDTO>>(results);
+                    return payments;
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}]");
+            }
+            return null;
+        }
+
+        public async Task<List<PaymentDTO>> SearchPaymentsByMethod(string method)
+        {
+            try
+            {
+                var results = await _paymentRepository.QueryPaymentByMethod(method);
+                if(results == null)
+                {
+                    _logger.LogError($"Could not get payments by method {method}");
+                }
+                else
+                {
+                    var payments = _mapper.Map<List<PaymentDTO>>(results);
+
+                    return payments;
+                }
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
             }
+            return null;
         }
 
-        public async Task UpdatePayment(Payment payment)
+        public async Task<List<PaymentDTO>> SearchPaymentsByAmount(string amount)
         {
             try
             {
-                await _paymentRepository.Update(payment);
+                var results = await _paymentRepository.QueryPaymentByAmount(amount);
+                if(results == null)
+                {
+                    _logger.LogError($"Could not get payments with amount {amount}");
+                }
+                else
+                {
+                    var payments = _mapper.Map<List<PaymentDTO>>(results);
+                    return payments;
+                }
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
             }
-        }
-
-        public async Task SearchPaymentsByMethod(string method)
-        {
-            try
-            {
-                await _paymentRepository.QueryPaymentByMethod(method);
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
-            }
-        }
-
-        public async Task SearchPaymentsByAmount(string amount)
-        {
-            try
-            {
-                await _paymentRepository.QueryPaymentByAmount(amount);
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
-            }
+            return null;
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DomainLayer.Models;
 using Microsoft.EntityFrameworkCore;
+using TransferLayer.DTOS;
 
 namespace DomainLayer.IRepository
 {
@@ -16,11 +17,13 @@ namespace DomainLayer.IRepository
 
         Task Insert(Ride ride);
 
-        Task Update(Ride ride);
+        Task Update(Guid rideId, Ride updatedRide);
 
-        Task Remove(Ride ride);
+        Task Remove(Guid rideId);
 
         Task CancelRide(Guid rideId);
+
+        Ride MapRideDTO(RideDTO rideDTO);
 
         Task<List<Ride>> GetDriverRides(Guid driverId);
 

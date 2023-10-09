@@ -55,12 +55,21 @@ namespace RepositoryLayer.Repository
                     bool userExists = await _context.Users.AnyAsync(u => u.Email == user.Email);
                     if (userExists)
                     {
-                        throw new InvalidOperationException("User with the same email already exists");
+                        _logger.LogError("User already exists");
+                        return;
                     }
-                    await _context.AddAsync(user);
-                    await _context.SaveChangesAsync();
+                    else
+                    {
+                        //create the User using the User class's Create method
+                        User newUser = User.Create(user.Email, user.UserName, user.Mobile, user.IdNumber, user.IdPhotoUrl, user.ProfilePhotoUrl, user.BirthDate, user.Role, user.Gender, user.IsActive);
+                        await _context.Users.AddAsync(newUser);
+                        await _context.SaveChangesAsync();
+                    }
                 }
-                throw new ArgumentNullException("User");
+                else
+                {
+                    _logger.LogError("User is null");
+                }
                 
             }
             catch(Exception ex)
@@ -70,19 +79,35 @@ namespace RepositoryLayer.Repository
             
         }
 
-        public async Task Update(Guid userId)
+        public async Task Update(Guid userId, User updatedUser) //TODO: Work on this update method until its sharp
         {
             try
             {
-                var user = await GetUserById(userId);
+                var user = await _context.Users.SingleOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {
-                    _context.Update(user);
+
+                    // Update all properties from updatedUser
+                    user.Id = user.Id;
+                    user.Email = updatedUser.Email;
+                    user.UserName = updatedUser.UserName;
+                    user.Mobile = updatedUser.Mobile;
+                    user.IdNumber = updatedUser.IdNumber;
+                    user.IdPhotoUrl = updatedUser.IdPhotoUrl;
+                    user.ProfilePhotoUrl = updatedUser.ProfilePhotoUrl;
+                    user.Gender = updatedUser.Gender;
+                    user.BirthDate = updatedUser.BirthDate;
+                    user.Role = updatedUser.Role;
+                    user.IsActive = updatedUser.IsActive;
+                    user.UpdatedAt = DateTime.Now;
                     await _context.SaveChangesAsync();
                 }
-                throw new ArgumentNullException("User");
+                else
+                {
+                    _logger.LogError("User not found");
+                }
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex)
             {
                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
             }
@@ -92,13 +117,16 @@ namespace RepositoryLayer.Repository
         {
             try
             {
-                var user = await GetUserById(userId);
+                var user = await _context.Users.SingleOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {
-                    _context.Remove(user);
+                    _context.Users.Remove(user);
                     await _context.SaveChangesAsync();
                 }
-                throw new ArgumentNullException("User");
+                else
+                {
+                    _logger.LogError("User not found");
+                }
             }
             catch (Exception ex)
             {
@@ -111,18 +139,13 @@ namespace RepositoryLayer.Repository
             return _mapper.Map<User>(userDTO);
         }
 
-        public UserDTO MapUser(User user)
-        {
-            return _mapper.Map<UserDTO>(user);
-        }
-
 
         public async Task<List<User>> Search(string query)
         {
             return await _context.Users
                                      .Where(u => u.Email.Contains(query) ||
                                      u.IdNumber.Equals(query) ||
-                                     u.PhoneNumber.Equals(query))
+                                     u.Mobile.Equals(query))
                                      .ToListAsync();
         }
 
@@ -144,20 +167,20 @@ namespace RepositoryLayer.Repository
                                  .ToListAsync();
         }
 
-        public async Task BookRide(Guid userId, Ride ride) //TODO: Work on a better system for Booking rides
-        {
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
-            if(user != null)
-            {
-                Ride newRide = new Ride
-                {
-                    //TODO: Add other ride attributes
-                    Status = RideStatus.Requested
-                };
-                user.Rides.Add(newRide);
-                await _context.SaveChangesAsync(); 
-            }
-        }
+        //public async Task BookRide(Guid userId, Ride ride) //TODO: Work on a better system for Booking rides
+        //{
+        //    var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+        //    if(user != null)
+        //    {
+        //        Ride newRide = new Ride
+        //        {
+        //            //TODO: Add other ride attributes
+        //            Status = RideStatus.Requested
+        //        };
+        //        user.Rides.Add(newRide);
+        //        await _context.SaveChangesAsync(); 
+        //    }
+        //}
 
         public async Task CancelRide(Guid rideId)
         {
@@ -174,4 +197,5 @@ namespace RepositoryLayer.Repository
             }
         }
     }
+    
 }

@@ -8,6 +8,7 @@ using ServiceLayer.CustomServices;
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using TransferLayer.DTOS;
+using static DomainLayer.Models.User;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,8 +60,16 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<UserDTO, User>(); 
-        CreateMap<User, UserDTO>();
+        CreateMap<User, UserDTO>()
+            .ForMember(dto => dto.RideIds, opt => opt.MapFrom(src => src.Rides.Select(r => r.Id).ToList()))
+            .ForMember(dto => dto.PaymentIds, opt => opt.MapFrom(src => src.Payments.Select(p => p.Id).ToList()))
+            .ReverseMap();
+        CreateMap<Driver, DriverDTO>()
+            .ForMember(dto => dto.VehicleIds, opt => opt.MapFrom(src => src.Vehicles.Select(v => v.Id).ToList()))
+            .ForMember(dto => dto.RideIds, opt => opt.MapFrom(src => src.Rides.Select(r => r.Id).ToList()))
+            .ReverseMap();
+        CreateMap<VehicleDTO, Vehicle>();
+        CreateMap<Vehicle, VehicleDTO>();
     }
 }
 #endregion

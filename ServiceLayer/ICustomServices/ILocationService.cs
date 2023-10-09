@@ -1,4 +1,4 @@
-using DomainLayer.Models;
+using TransferLayer.DTOS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,15 +9,17 @@ namespace ServiceLayer.ICustomServices
 {
     public interface ILocationService
     {
-        Task GetAllLocations();
+        Task<List<LocationDTO>> GetAllLocations();
 
-        Task GetLocationById(Guid Id);
+        Task<LocationDTO> GetLocationById(Guid Id);
 
-        Task CreateLocation(Location location);
+        Task<bool> CreateLocation(LocationDTO locationDTO);
 
-        Task UpdateLocation(Location location);
+        Task<bool> UpdateLocation(Guid locationId, LocationDTO updatedLocation);
 
-        Task DeleteLocation(Location location);
+        Task<bool> DeleteLocation(Guid locationId);
+
+        //TODO: Implement search method by name
     }
 }
 

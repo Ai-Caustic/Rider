@@ -13,8 +13,10 @@ namespace DomainLayer.Models
         public virtual Guid Id { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; }
         
-        public bool IsActive { get; set;}
+        public bool IsActive { get; set; }
 
         public bool IsTranscient() => Id == Guid.Empty;
 

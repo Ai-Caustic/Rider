@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TransferLayer.DTOS;
 
 namespace DomainLayer.IRepository
 {
@@ -16,9 +17,11 @@ namespace DomainLayer.IRepository
 
         Task Insert(Vehicle vehicle);
 
-        Task Update(Vehicle vehicle);
+        Task Update(Guid vehicleId, Vehicle updatedVehicle);
 
-        Task Remove(Vehicle vehicle);
+        Task Remove(Guid vehicleId);
+
+        Vehicle MapVehicleDTO(VehicleDTO vehicleDTO);
 
         Task<Vehicle> SearchPlate(string plateNo);
 

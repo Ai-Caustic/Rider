@@ -16,7 +16,7 @@ namespace ServiceLayer.ICustomServices
 
         Task<bool> CreateUser (UserDTO userDTO);
 
-        Task<bool> UpdateUser (Guid userId);
+        Task<bool> UpdateUser (Guid userId, UserDTO updatedUser);
 
         Task<bool> DeleteUser (Guid userId);
 
@@ -26,7 +26,7 @@ namespace ServiceLayer.ICustomServices
 
         Task<bool> GetUserRides(Guid userId);
 
-        Task<bool> BookRide(Guid userId, Ride ride);
+        //Task<bool> BookRide(Guid userId, Ride ride);
 
         Task<bool> CancelRide (Guid rideId);
 

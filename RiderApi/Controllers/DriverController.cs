@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServiceLayer.ICustomServices;
+using TransferLayer.DTOS;
 
 namespace RiderApi.Controllers
 {
@@ -28,11 +29,11 @@ namespace RiderApi.Controllers
         }
 
         [HttpGet(nameof(GetDriverById))]
-        public IActionResult GetDriverById(Guid Id)
+        public async Task<IActionResult> GetDriverById(Guid Id)
         {
             try
             {
-                var driver = _driverService.GetDriverById(Id);
+                var driver = await _driverService.GetDriverById(Id);
                 if (driver != null)
                 {
                     _logger.LogInformation("Returned driver");
@@ -52,11 +53,11 @@ namespace RiderApi.Controllers
         }
 
         [HttpGet(nameof(GetAllDrivers))]
-        public IActionResult GetAllDrivers()
+        public async Task<IActionResult> GetAllDrivers()
         {
             try
             {
-                var drivers = _driverService.GetAllDrivers();
+                var drivers = await _driverService.GetAllDrivers();
                 if (drivers != null)
                 {
                     _logger.LogInformation("Returned all drivers");
@@ -75,19 +76,20 @@ namespace RiderApi.Controllers
         }
 
         [HttpPost(nameof(CreateDriver))]
-        public IActionResult CreateDriver(Driver driver)
+        public async Task<IActionResult> CreateDriver(DriverDTO driver)
         {
             try
             {
-                if(driver != null)
+                if(driver == null)
                 {
-                    _driverService.CreateDriver(driver);
-                    _logger.LogInformation("Created driver");
-                    return Ok("Created Driver");
+                    _logger.LogError("Invalid driver input");
+                    return BadRequest();
                 }
                 else
                 {
-                    _logger.LogWarning("Driver is null");
+                    await _driverService.CreateDriver(driver);
+                    _logger.LogInformation("Created driver");
+                    return Ok("Created driver");
                 }
             }
             catch (Exception ex)
@@ -98,20 +100,22 @@ namespace RiderApi.Controllers
         }
 
         [HttpPut(nameof(UpdateDriver))]
-        public IActionResult UpdateDriver(Driver driver)
+        public async Task<IActionResult> UpdateDriver(Guid Id, DriverDTO updatedDriver)
         {
             try
             {
-                if(driver != null)
+                var driver = await _driverService.GetDriverById(Id);
+                if (driver == null)
                 {
-                    _driverService.UpdateDriver(driver);
-                    _logger.LogError("Driver updated successfully");
-                    return Ok();
+                    _logger.LogError($"Could not find driver {Id}");
+                    return NotFound("Driver not found");
                 }
                 else
                 {
-                    _logger.LogWarning("Driver not null");
-                }
+                    await _driverService.UpdateDriver(Id, updatedDriver);
+                    _logger.LogInformation($"Updated driver {Id}");
+                    return Ok("Updated driver");
+                }   
             }
             catch (Exception ex)
             {
@@ -121,19 +125,21 @@ namespace RiderApi.Controllers
         }
 
         [HttpDelete(nameof(DeleteDriver))]
-        public IActionResult DeleteDriver(Driver driver)
+        public async Task<IActionResult> DeleteDriver(Guid Id)
         {
             try
             {
-                if(driver != null)
+                var driver = await _driverService.GetDriverById(Id);
+                if(driver == null)
                 {
-                    _driverService.DeleteDriver(driver);
-                    _logger.LogInformation("Driver deleted successfully");
-                    return Ok("Deleted driver");
+                    _logger.LogError($"Could not find driver {Id}");
+                    return NotFound("Driver not found");
                 }
                 else
                 {
-                    _logger.LogWarning("Could not delete driver");
+                    await _driverService.DeleteDriver(Id);
+                    _logger.LogInformation($"Deleted driver {Id}");
+                    return Ok("Deleted driver");
                 }
             }
             catch (Exception ex)
@@ -144,16 +150,16 @@ namespace RiderApi.Controllers
         }
 
         [HttpPost(nameof(AssignVehicleToDriver))]
-        public IActionResult AssignVehicleToDriver(Guid driverId, Guid vehicleId)
+        public async Task<IActionResult> AssignVehicleToDriver(Guid driverId, Guid vehicleId)
         {
             try
             {
-                var driver = _driverService.GetDriverById(driverId);
-                var vehicle = _vehicleService.GetVehicleById(vehicleId);
+                var driver = await _driverService.GetDriverById(driverId);
+                var vehicle = await _vehicleService.GetVehicleById(vehicleId);
 
                 if (driver != null && vehicle != null)
                 {
-                    _driverService.AssignVehicleToDriver(driverId, vehicleId);
+                    await _driverService.AssignVehicleToDriver(driverId, vehicleId);
                     _logger.LogInformation($"Assigning vehicle {vehicleId} to driver {driverId}");
                     return Ok("Assigned vehicle to driver");
                 }
@@ -171,16 +177,16 @@ namespace RiderApi.Controllers
         }
 
         [HttpPost(nameof(UnnassignVehicleFromDriver))]
-        public IActionResult UnnassignVehicleFromDriver(Guid driverId, Guid vehicleId)
+        public async Task<IActionResult> UnnassignVehicleFromDriver(Guid driverId, Guid vehicleId)
         {
             try
             {
-                var driver = _driverService.GetDriverById(driverId);
-                var vehicle = _vehicleService.GetVehicleById(vehicleId);
+                var driver = await _driverService.GetDriverById(driverId);
+                var vehicle = await _vehicleService.GetVehicleById(vehicleId);
 
                 if (driver != null && vehicle != null)
                 {
-                    _driverService.UnassignVehicleFromDriver(driverId, vehicleId);
+                    await _driverService.UnassignVehicleFromDriver(driverId, vehicleId);
                     _logger.LogInformation($"Unnaseigned vehicle {vehicleId} from driver {driverId}");
                     return Ok("Unnaseigned vehicle from driver");
                 }
@@ -199,16 +205,12 @@ namespace RiderApi.Controllers
         }
 
         [HttpGet(nameof(SearchDriver))]
-        public IActionResult SearchDriver(string query)
+        public async Task<IActionResult> SearchDriver(string query)
         {
             try
             {
-                if (query != null)
-                {
-                    _driverService.SearchDriver(query);
-                    _logger.LogInformation($"Searched for {query}");
-                    return Ok("Searched for query");
-                }
+                var result = await _driverService.SearchDrivers(query);
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -218,17 +220,17 @@ namespace RiderApi.Controllers
         }
 
         [HttpGet(nameof(GetDriverVehicles))]
-        public IActionResult GetDriverVehicles(Guid driverId)
+        public async Task<IActionResult> GetDriverVehicles(Guid driverId)
         {
             try
             {
-                var driver = _driverService.GetDriverById(driverId);
+                var driver = await _driverService.GetDriverById(driverId);
 
                 if (driver != null)
                 {
-                    _driverService.GetDriverVehicles(driverId);
+                    var vehicles = await _driverService.GetDriverVehicles(driverId);
                     _logger.LogInformation($"Returned driver {driverId} vehicles");
-                    return Ok("Found driver's vehicles");
+                    return Ok(vehicles);
                 }
                 else
                 {
@@ -244,17 +246,17 @@ namespace RiderApi.Controllers
         }
 
         [HttpGet(nameof(GetDriverRideHistory))]
-        public IActionResult GetDriverRideHistory(Guid driverId)
+        public async Task<IActionResult> GetDriverRideHistory(Guid driverId)
         {
             try
             {
-                var driver = _driverService.GetDriverById(driverId);
+                var driver = await _driverService.GetDriverById(driverId);
 
                 if (driver != null)
                 {
-                    _driverService.GetDriverRideHistory(driverId);
+                    var rides = await _driverService.GetDriverRideHistory(driverId);
                     _logger.LogInformation($"Returned driver {driverId} ride history");
-                    return Ok("Fetched driver's ride history");
+                    return Ok(rides);
                 }
                 else
                 {
@@ -270,17 +272,17 @@ namespace RiderApi.Controllers
         }
 
         [HttpPost(nameof(StartRide))]
-        public IActionResult StartRide(Guid driverId, Guid rideId, Guid vehicleId)
+        public async Task<IActionResult> StartRide(Guid driverId, Guid rideId, Guid vehicleId)
         {
             try
             {
-                var driver = _driverService.GetDriverById(driverId);
+                var driver = await _driverService.GetDriverById(driverId);
                 var ride = _rideService.GetRideById(rideId);
                 var vehicle = _vehicleService.GetVehicleById(vehicleId);
 
                 if (driver != null && ride != null &&vehicle != null)
                 {
-                    _driverService.StartRide(driverId, rideId, vehicleId);
+                    await _driverService.StartRide(driverId, rideId, vehicleId);
                     _logger.LogInformation($"Started ride {rideId}");
                     return Ok("Started ride");
                 }
@@ -298,7 +300,7 @@ namespace RiderApi.Controllers
         }
 
         [HttpPost(nameof(EndRide))]
-        public IActionResult EndRide(Guid rideId)
+        public async Task<IActionResult> EndRide(Guid rideId)
         {
             try
             {
@@ -306,7 +308,7 @@ namespace RiderApi.Controllers
                 
                 if(ride != null)
                 {
-                    _driverService.EndRide(rideId);
+                    await _driverService.EndRide(rideId);
                     _logger.LogInformation($"Ended ride {rideId}");
                     return Ok("Ended ride");
                 }

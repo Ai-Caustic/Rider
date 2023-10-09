@@ -4,22 +4,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TransferLayer.DTOS;
 
 namespace ServiceLayer.ICustomServices
 {
     public interface IPaymentService
     {
-        Task GetAllPayments();
+        Task<List<PaymentDTO>> GetAllPayments();
 
-        Task GetPaymentById(Guid Id);
+        Task<PaymentDTO> GetPaymentById(Guid Id);
 
-        Task CreatePayment(Payment payment);
+        Task<bool> CreatePayment(PaymentDTO paymentDTO);
 
-        Task UpdatePayment(Payment payment);
+        Task<bool> UpdatePayment(Guid paymentId, PaymentDTO updatedPayment);
 
-        Task SearchPaymentsByMethod(string method);
+        Task<bool> DeletePayment(Guid paymentId);
 
-        Task SearchPaymentsByAmount(string amount);
+        Task<List<PaymentDTO>> GetUserPayments(Guid userId);
+
+        Task<List<PaymentDTO>> SearchPaymentsByMethod(string method);
+
+        Task<List<PaymentDTO>> SearchPaymentsByAmount(string amount);
 
         //Task ConfirmPayment(Guid paymentId);
     }

@@ -17,19 +17,11 @@ namespace DomainLayer.Models
 
         public Guid ? VehicleId { get; set; }
 
-        public Guid ? RideId { get; set; }
+        public Guid PaymentId { get; set; }
 
-        public string ? PickupLocation { get; set; }
+        public string PickupLocation { get; set; }
 
-        public double PickUpLatitude { get; set; }
-
-        public double PickUpLongitude  { get; set; }
-
-        public string ? Destination { get; set; }
-
-        public double DestinationLatitude { get; set; }
-
-        public double DestinationLongitude { get; set; }
+        public string Destination { get; set; }
 
         public DateTime StartTime { get; set; } // Timestamp for when the ride stared
 
@@ -46,5 +38,29 @@ namespace DomainLayer.Models
         public virtual Driver ? Driver { get; set; }
 
         public virtual Payment ? Payment { get; set; }
+
+
+        //empty constructor
+        public Ride() {}
+
+        public static Ride Create(Guid driverId, Guid userId, Guid vehicleId, string pickupLocation, string destination, DateTime startTime, DateTime endTime, RideStatus status, double rideFare, bool isActive)
+        {
+            var ride = new Ride
+            {
+                DriverId = driverId,
+                UserId = userId,
+                VehicleId = vehicleId,
+                PickupLocation = pickupLocation,
+                Destination = destination,
+                StartTime = startTime,
+                EndTime = endTime,
+                Status = RideStatus.Requested,
+                RideFare = rideFare,
+                IsActive = isActive
+            };
+
+            ride.GenerateNewIdentity();
+            return ride;
+        }
     }
 }

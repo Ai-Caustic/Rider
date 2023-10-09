@@ -22,19 +22,20 @@ namespace RiderApi.Controllers
         }   
 
         [HttpGet(nameof(GetUserById))]
-        public async Task<IActionResult> GetUserById(Guid userId)
+        public async Task<IActionResult> GetUserById(Guid Id)
         {
             try
             {
-                var user = await _userService.GetUserById(userId);
-                if (user != null)
+                var user = await _userService.GetUserById(Id);
+                if(user == null)
                 {
-                    _logger.LogInformation("Returned User");
-                    return Ok(user);
+                    _logger.LogWarning("User not found");
+                    return NotFound(nameof(User));
                 }
                 else
                 {
-                    return NotFound();
+                    _logger.LogInformation("Returned User");
+                    return Ok(user);
                 }
             }
             catch(Exception ex)
@@ -52,11 +53,14 @@ namespace RiderApi.Controllers
                 var users = await _userService.GetAllUsers();
                 if (users == null)
                 {
-                    _logger.LogError("Could not find users");
-                   return NotFound("Users");
-                }   
-                _logger.LogInformation("All users returned");
-                return Ok(users);
+                    _logger.LogWarning("Could not find users");
+                   return NotFound(nameof(users));
+                }  
+                else
+                { 
+                    _logger.LogInformation("All users returned");
+                    return Ok(users);
+                }
             }
             catch(Exception ex)
             {
@@ -66,18 +70,21 @@ namespace RiderApi.Controllers
         }
 
         [HttpPost(nameof(CreateUser))]
-        public IActionResult CreateUser(UserDTO user)
+        public async Task<IActionResult> CreateUser(UserDTO user)
         {
             try
             {
                 if(user == null)
                 {
-                    _logger.LogError("Invalid user input");
+                    _logger.LogWarning("Invalid user input");
                     return BadRequest();
                 }
-                _userService.CreateUser(user);
-                _logger.LogInformation("Created user");
-                return Ok("Created user");
+                else
+                {
+                    await _userService.CreateUser(user);
+                    _logger.LogInformation("Created user");
+                    return Ok("Created user");
+                }
             }
             catch(Exception ex)
             {
@@ -87,19 +94,22 @@ namespace RiderApi.Controllers
         }
 
         [HttpPut(nameof(UpdateUser))]
-        public async Task<IActionResult> UpdateUser(Guid userId)
+        public async Task<IActionResult> UpdateUser(Guid Id, UserDTO updatedUser)
         {
             try
             {
-               var user = await _userService.GetUserById(userId);
-               if(user == null)
-               {
-                  _logger.LogError($"Cannot find user {userId}");
-                  return NotFound("User not found");
-               }
-               await _userService.UpdateUser(userId);
-                _logger.LogInformation("Updated user");
-                return Ok("Updated user");
+               var user = await _userService.GetUserById(Id);
+                if (user == null)
+                {
+                    _logger.LogWarning($"Cannot find user {Id}");
+                    return NotFound("User not found");
+                }
+                else
+                {
+                    await _userService.UpdateUser(Id, updatedUser);
+                    _logger.LogInformation("Updated user");
+                    return Ok("Updated user");
+                }
             }
             catch (Exception ex)
             {
@@ -109,18 +119,22 @@ namespace RiderApi.Controllers
         }
 
         [HttpDelete(nameof(DeleteUser))]
-        public async Task<IActionResult> DeleteUser(Guid userId)
+        public async Task<IActionResult> DeleteUser(Guid Id)
         {
             try
             {
-                var user = await _userService.GetUserById(userId);
-                if(user == null)
+                var user = await _userService.GetUserById(Id);
+                if (user == null)
                 {
-                    _logger.LogError($"Could not find user {userId}");
+                    _logger.LogError($"Could not find user {Id}");
                     return NotFound("User not found");
                 }
-                _logger.LogInformation("Deleted user");
-                return Ok("Deleted user");
+                else
+                {
+                    await _userService.DeleteUser(Id);
+                    _logger.LogInformation("Deleted user");
+                    return Ok("Deleted user");
+                }
             }
             catch(Exception ex)
             {
@@ -146,11 +160,11 @@ namespace RiderApi.Controllers
         }
 
         [HttpGet(nameof(UserPayments))]
-        public IActionResult UserPayments(Guid userId)
+        public IActionResult UserPayments(Guid Id)
         {
             try
             {
-                _userService.GetUserPayments(userId);
+                _userService.GetUserPayments(Id);
                 _logger.LogInformation("Returned user payments");
                 return Ok("User Payments");
             }
@@ -162,11 +176,11 @@ namespace RiderApi.Controllers
         }
 
         [HttpGet(nameof(UserRides))]
-        public IActionResult UserRides(Guid userId)
+        public IActionResult UserRides(Guid Id)
         {
             try
             {
-                _userService.GetUserRides(userId);
+                _userService.GetUserRides(Id);
                 _logger.LogInformation("Returned user rides");
                 return Ok("User rides");
             }
@@ -177,28 +191,28 @@ namespace RiderApi.Controllers
             return BadRequest();
         }
 
-        [HttpPost(nameof(BookRide))]
-        public IActionResult BookRide(Guid userId, Ride ride)
-        {
-            try
-            {
-                _userService.BookRide(userId, ride);
-                _logger.LogInformation("User Booked Ride");
-                return Ok("Booked ride");
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
-            }
-            return BadRequest();
-        }
+        //[HttpPost(nameof(BookRide))]
+        //public IActionResult BookRide(Guid Id, Ride ride)
+        //{
+        //    try
+        //    {
+        //        _userService.BookRide(Id, ride);
+        //        _logger.LogInformation("User Booked Ride");
+        //        return Ok("Booked ride");
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+        //    }
+        //    return BadRequest();
+        //}
 
         [HttpPost(nameof(CancelRide))]
-        public IActionResult CancelRide(Guid rideId)
+        public IActionResult CancelRide(Guid Id)
         {
             try
             {
-                _userService.CancelRide(rideId);
+                _userService.CancelRide(Id);
                 _logger.LogInformation("Ride cancelled");
                 return Ok("Ride cancelled");
             }

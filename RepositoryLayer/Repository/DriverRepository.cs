@@ -8,6 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DomainLayer.IRepository;
+using Microsoft.Extensions.Logging;
+using TransferLayer.DTOS;
+using AutoMapper;
 
 namespace RepositoryLayer.Repository
 {
@@ -16,9 +19,15 @@ namespace RepositoryLayer.Repository
 
         private readonly ApplicationDbContext _context;
 
-        public DriverRepository(ApplicationDbContext context)
+        private readonly ILogger<DriverRepository> _logger;
+
+        private readonly IMapper _mapper;
+
+        public DriverRepository(ApplicationDbContext context, ILogger<DriverRepository> logger, IMapper mapper)
         {
             _context = context;
+            _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<List<Driver>> GetAllDrivers()
@@ -47,69 +56,142 @@ namespace RepositoryLayer.Repository
 
         public async Task Insert(Driver driver)
         {
-            if (driver == null)
+            try
             {
-               throw new ArgumentNullException("driver");
-            }
-            await _context.AddAsync(driver);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task Update(Driver driver)
-        {
-            if (driver == null)
-            {
-                throw new ArgumentNullException("driver");
-            }
-            _context.Update(driver);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task Remove(Driver driver)
-        {
-            if (driver == null)
-            {
-                throw new ArgumentNullException("driver");
-            }
-            _context.Remove(driver);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task AssignVehicle(Guid driverId, Guid vehicleId)
-        {
-            var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == driverId);
-            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(d => d.Id == vehicleId);
-
-            if (driver != null && vehicle != null)
-            {
-                if(vehicle.DriverId == null)
+                if (driver != null)
                 {
-                    vehicle.DriverId = driverId;
+                    bool driverExists = await _context.Drivers.AnyAsync(d => d.Email == driver.Email);
+                    if (driverExists)
+                    {
+                        _logger.LogError("Driver with the same email already exists");
+                    }
+                    else
+                    {
+                        await _context.AddAsync(driver); //TODO: Use create method instead
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Driver cannot be null");
+                }
+                
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
+        }
+
+        public async Task Update(Guid driverId, Driver updatedDriver)
+        {
+            try
+            {
+                var driver = await _context.Drivers.SingleOrDefaultAsync(d => d.Id == driverId);
+                if (driver != null)
+                {
+                    driver.Id = driver.Id;
+                    driver.FirstName = updatedDriver.FirstName;
+                    driver.LastName = updatedDriver.LastName;
+                    driver.Email = updatedDriver.Email;
+                    driver.Mobile = updatedDriver.Mobile;
+                    driver.DriverPhotoUrl = updatedDriver.DriverPhotoUrl;
+                    driver.LicensePhotoUrl = updatedDriver.LicensePhotoUrl;
+                    driver.VerificationBadgeUrl = updatedDriver.VerificationBadgeUrl;
+                    driver.UpdatedAt = DateTime.Now;
+
                     await _context.SaveChangesAsync();
                 }
                 else
                 {
-                    throw new Exception("Vehicle already has a driver");
+                    _logger.LogError("Driver not found");
                 }
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
+        }
+
+        public async Task Remove(Guid driverId)
+        {
+            try
+            {
+                var driver = await _context.Drivers.SingleOrDefaultAsync(d => d.Id == driverId);
+                if(driver != null)
+                {
+                    _context.Drivers.Remove(driver);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    _logger.LogError("Driver not found");
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
+        }
+
+        public Driver MapDriverDTO(DriverDTO driverDTO)
+        {
+            return _mapper.Map<Driver>(driverDTO);
+        }
+
+        public async Task AssignVehicle(Guid driverId, Guid vehicleId)
+        {
+            try
+            {
+                var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == driverId);
+                var vehicle = await _context.Vehicles.FirstOrDefaultAsync(d => d.Id == vehicleId);
+
+                if (driver != null && vehicle != null)
+                {
+                    if(vehicle.DriverId == null)
+                    {
+                        vehicle.DriverId = driverId;
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        throw new Exception("Vehicle already has a driver");
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Vehicle or driver not found");
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
             }
         }
 
         public async Task UnassignVehicle(Guid driverId, Guid vehicleId)
         {
-            var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == driverId);
-            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(d => d.Id == vehicleId);
-
-            if(driver != null && vehicle != null)
+            try
             {
-                if (vehicle.DriverId == driverId)
+                var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == driverId);
+                var vehicle = await _context.Vehicles.FirstOrDefaultAsync(d => d.Id == vehicleId);
+
+                if(driver != null && vehicle != null)
                 {
-                    _context.Entry(vehicle).Property("DriverId").CurrentValue = null;
-                    await _context.SaveChangesAsync();
+                    if (vehicle.DriverId == driverId)
+                    {
+                        _context.Entry(vehicle).Property("DriverId").CurrentValue = null;
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("The driver is not assigned to this vehicle");
+                    }
                 }
-                else
-                {
-                    throw new InvalidOperationException("The driver is not assigned to this vehicle");
-                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
             }
         }
 
@@ -140,28 +222,36 @@ namespace RepositoryLayer.Repository
 
         public async Task StartRide(Guid driverId, Guid rideId, Guid vehicleId)
         {
-            var driver = await _context.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == driverId);
-            var ride = await _context.Rides.AsNoTracking().FirstOrDefaultAsync(r => r.Id == rideId);
-            var vehicle = await _context.Vehicles.AsNoTracking().FirstOrDefaultAsync(v => v.Id == vehicleId);
-
-            if (driver != null && ride != null && vehicle != null)
+            try
             {
-                if( ride.DriverId == null && ride.Status == RideStatus.Requested)
+                var driver = await _context.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == driverId);
+                var ride = await _context.Rides.AsNoTracking().FirstOrDefaultAsync(r => r.Id == rideId);
+                var vehicle = await _context.Vehicles.AsNoTracking().FirstOrDefaultAsync(v => v.Id == vehicleId);
+
+                if (driver != null && ride != null && vehicle != null)
                 {
-                    ride.DriverId = driverId;
-                    ride.VehicleId = vehicleId;
-                    //await _context.Rides.Update(ride); TODO: Confirm if I should update context
-                    await _context.SaveChangesAsync();
+                    if( ride.DriverId == null && ride.Status == RideStatus.Requested)
+                    {
+                        ride.DriverId = driverId;
+                        ride.VehicleId = vehicleId;
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Cannot find driver or ride");
+                    }
                 }
-                else
-                {
-                    throw new ArgumentException("Cannot find driver or ride");
-                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
             }
         }
 
         public async Task EndRide(Guid rideId)
         {
+            try
+            {
             var ride = await _context.Rides.AsNoTracking().FirstOrDefaultAsync(r => r.Id == rideId);
 
             if (ride != null && ride.Status == RideStatus.InProgress)
@@ -173,8 +263,11 @@ namespace RepositoryLayer.Repository
             {
                 throw new ArgumentException("Cannot find ride or ride is not in progress");
             }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message} Exception: {ex.InnerException}");
+            }
         }
-
-        //TODO: Implement method GetRides and GetVehicles eg _context.Drivers.Include(x => x.Rides) 
     }
 }

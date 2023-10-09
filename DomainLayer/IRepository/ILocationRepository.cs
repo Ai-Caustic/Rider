@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DomainLayer.Models;
+using TransferLayer.DTOS;
 
 
 namespace DomainLayer.IRepository
@@ -16,9 +17,13 @@ namespace DomainLayer.IRepository
 
         Task Insert(Location location);
 
-        Task Update(Location location);
+        Task Update(Guid locationId, Location updatedLocation);
 
-        Task Remove(Location location);
+        Task Remove(Guid locationId);
+
+        Location MapLocationDTO(LocationDTO locationDTO);
+
+        //TODO: Ad search method by name
 
     }
 }
